@@ -59,19 +59,21 @@ def run_pipeline(video_id: int, source_image_path: str, category: str, duration:
         logger.info(f"reel_pipeline: started for video_id={video_id}, category={category}, duration={duration or 'default'}")
 
         # ── Stage 1: bg removal + scene generation + compositing ──────
-        # Inform the user if no HF token is provided. When the HF_API_TOKEN
-        # environment variable is missing, the scene generator falls back to
-        # premium gradients. Provide a hint in the stage message so users
-        # understand why they're seeing gradients instead of AI scenes.
-        if not getattr(settings, "HF_API_TOKEN", ""):  # token not provided
-            _set_stage("No HF API token – using gradient backgrounds. Removing background and generating scenes…")
-        else:
-            _set_stage("Removing background and generating scenes…")
+        fallback_reported = False
+
+        def _report_fallback() -> None:
+            nonlocal fallback_reported
+            if not fallback_reported:
+                fallback_reported = True
+                _set_stage("AI scenes are unavailable, so polished local backgrounds are being used…")
+
         frame_dir = Path(settings.MEDIA_ROOT) / "reel_frames"
         frame_paths = generate_variations(
             source_path=source_image_path,
             category=category,
             save_dir=frame_dir,
+            stage_callback=_set_stage,
+            fallback_callback=_report_fallback,
         )
 
         if not frame_paths:
@@ -86,7 +88,7 @@ def run_pipeline(video_id: int, source_image_path: str, category: str, duration:
         if duration:
             try:
                 total_secs = float(duration)
-                if total_secs in (4.0, 6.0, 9.0):
+                if total_secs in (4.0, 6.0, 8.0):
                     target_duration = total_secs
             except Exception:
                 target_duration = 4.0
@@ -116,6 +118,7 @@ def run_pipeline(video_id: int, source_image_path: str, category: str, duration:
             caption_style=caption_style,
             caption_segments=caption_segments,
         )
+        _set_stage("Saving the completed reel…")
         video_file_name = _media_file_name_from_url(video_url)
 
         # ── Done ──────────────────────────────────────────────────────
@@ -124,7 +127,10 @@ def run_pipeline(video_id: int, source_image_path: str, category: str, duration:
         video.video_url   = video_url
         if video_file_name:
             video.video_file.name = video_file_name
-        video.error_message = ""
+        video.error_message = (
+            "This reel used polished local scene backgrounds because the AI scene provider was unavailable."
+            if fallback_reported else ""
+        )
         update_fields = ["status", "video_url", "error_message"]
         if video_file_name:
             update_fields.append("video_file")
@@ -142,7 +148,7 @@ def run_pipeline(video_id: int, source_image_path: str, category: str, duration:
             from core.models import GeneratedVideo as GV
             GV.objects.filter(pk=video_id).update(
                 status=GV.STATUS_FAILED,
-                error_message=str(exc)[:500],
+                error_message="We could not generate this reel. Please check the image and try again.",
             )
         except Exception:
             pass

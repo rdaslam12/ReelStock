@@ -140,7 +140,7 @@ class GeneratedVideo(models.Model):
     request_id = models.CharField(max_length=200, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     error_message = models.TextField(blank=True)
-    duration = models.CharField(max_length=20, blank=True, default='5')
+    duration = models.CharField(max_length=20, blank=True, default='4')
     video_style = models.CharField(max_length=100, blank=True, default='Cinematic')
     caption_style = models.CharField(max_length=40, blank=True, default='auto')
     caption_script = models.JSONField(default=list, blank=True)

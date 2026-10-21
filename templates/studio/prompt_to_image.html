@@ -112,7 +112,7 @@ const GENERATE_URL = "{% url 'generate_image' %}";
 const SAVE_URL     = "{% url 'save_image' %}";
 const CSRF = "{{ csrf_token }}";
 
-let lastImageUrl = null, lastPrompt = null, lastStyle = null, lastRatio = null;
+let lastImageUrl = null, lastAssetId = null;
 
 function resetResult() {
   document.getElementById('gen-placeholder').style.display='flex';
@@ -123,6 +123,7 @@ function resetResult() {
   document.getElementById('image-share-actions').style.display='none';
   document.getElementById('status-msg').textContent='';
   lastImageUrl=null;
+  lastAssetId=null;
 }
 
 function setStatus(msg, err=false) {
@@ -157,22 +158,22 @@ document.getElementById('generateImageBtn').addEventListener('click', async func
   document.getElementById('gen-actions').style.display='none';
   document.getElementById('publish-confirm').style.display='none';
   setStatus('Sending to AI generator…');
-  lastStyle=document.getElementById('imageStyle').value;
-  lastRatio=document.getElementById('aspectRatio').value;
-  lastPrompt=prompt;
+  const style=document.getElementById('imageStyle').value;
+  const ratio=document.getElementById('aspectRatio').value;
   try {
     const r=await fetch(GENERATE_URL,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
-      body:JSON.stringify({prompt,style:lastStyle,aspect_ratio:lastRatio})});
+      body:JSON.stringify({prompt,style,aspect_ratio:ratio})});
     const d=await r.json();
     if (!d.success) throw new Error(d.error||'Failed');
     lastImageUrl=d.image_url;
+    lastAssetId=d.asset_id;
     const img=document.getElementById('result-img');
     img.onload = () => fitGeneratedPreview(img, document.getElementById('gen-canvas'));
     img.src=d.image_url; img.style.display='block';
     document.getElementById('downloadBtn').href=d.image_url;
     showActions(); setStatus('Image generated successfully.');
     const pb=document.getElementById('publishBtn');
-    if(pb) pb.textContent='Publish';
+    if(pb) { pb.textContent='Publish'; pb.style.display=''; pb.disabled=false; }
   } catch(e) {
     document.getElementById('gen-placeholder').style.display='flex';
     setStatus(e.message||'Something went wrong.',true);
@@ -186,14 +187,14 @@ document.getElementById('generateImageBtn').addEventListener('click', async func
 // ── Publish ────────────────────────────────────────────────────────
 const publishBtn=document.getElementById('publishBtn');
 if(publishBtn) publishBtn.addEventListener('click', async function() {
-  if(!lastImageUrl){
+  if(!lastImageUrl || !lastAssetId){
     window.RSToast && RSToast.show('Nothing to publish. Generate an image first.', 'info');
     return;
   }
   this.disabled=true; this.textContent='Publishing…';
   try {
     const r=await fetch(SAVE_URL,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
-      body:JSON.stringify({image_url:lastImageUrl,prompt:lastPrompt,style:lastStyle,aspect_ratio:lastRatio,publish:true})});
+      body:JSON.stringify({asset_id:lastAssetId,publish:true})});
     const d=await r.json();
     if(d.success){
       this.style.display='none';

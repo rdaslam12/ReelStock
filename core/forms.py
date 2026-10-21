@@ -54,3 +54,45 @@ class CompleteProfileForm(forms.Form):
         profile.needs_profile_completion = False
         profile.save(update_fields=["needs_profile_completion"])
         return user
+
+
+class EditProfileForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=150, required=True)
+    last_name = forms.CharField(max_length=150, required=False)
+    email = forms.EmailField(max_length=254, required=True)
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            "first_name", "last_name", "email", "bio", "location", "website",
+            "x_handle", "instagram", "youtube", "tiktok",
+        ]
+        widgets = {
+            "bio": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+        if user and not self.is_bound:
+            self.fields["first_name"].initial = user.first_name
+            self.fields["last_name"].initial = user.last_name
+            self.fields["email"].initial = user.email
+        for field in self.fields.values():
+            field.widget.attrs.setdefault("class", "form-control rounded-3")
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        if User.objects.filter(email__iexact=email).exclude(pk=self.user.pk).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        self.user.first_name = self.cleaned_data["first_name"].strip()
+        self.user.last_name = self.cleaned_data["last_name"].strip()
+        self.user.email = self.cleaned_data["email"]
+        if commit:
+            self.user.save(update_fields=["first_name", "last_name", "email"])
+            profile.save()
+        return profile

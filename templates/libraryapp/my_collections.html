@@ -20,6 +20,10 @@
     <div class="mb-3">
       <input type="text" id="col-desc" class="form-control rounded-3" placeholder="Description (optional)" maxlength="300">
     </div>
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="col-public" checked>
+      <label class="form-check-label" for="col-public">Public — anyone with the link can view this collection</label>
+    </div>
     <div class="d-flex gap-2">
       <button class="btn btn-primary rounded-pill px-4" id="submit-collection-btn">Create</button>
       <button class="btn btn-outline-secondary rounded-pill" id="cancel-collection-btn">Cancel</button>
@@ -72,15 +76,19 @@ cancelBtn.addEventListener('click', () => { form.style.display = 'none'; btn.sty
 submitBtn.addEventListener('click', async () => {
   const name = document.getElementById('col-name').value.trim();
   const desc = document.getElementById('col-desc').value.trim();
+  const isPublic = document.getElementById('col-public').checked;
   if (!name) { alert('Please enter a collection name.'); return; }
   try {
     const res = await fetch('{% url "create_collection" %}', {
       method: 'POST',
       headers: {'Content-Type':'application/json','X-CSRFToken': getCookie('csrftoken')},
-      body: JSON.stringify({name, description: desc})
+      body: JSON.stringify({name, description: desc, is_public: isPublic})
     });
-    if (res.ok) { location.reload(); }
-  } catch(e) {}
+    if (res.ok) { location.reload(); return; }
+    window.RSToast && RSToast.show('Could not create the collection.', 'error');
+  } catch(e) {
+    window.RSToast && RSToast.show('Could not create the collection.', 'error');
+  }
 });
 
 function getCookie(name) {

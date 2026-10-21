@@ -1,24 +1,21 @@
-{#
-  Pagination control.  Expects ``page``, ``total_pages``, ``page_range``,
-  ``current_category`` and ``search_query`` in the context.  Generates
-  links that preserve the current filters.
-#}
-<nav aria-label="Page navigation">
+{% if assets.paginator.num_pages > 1 %}
+<nav aria-label="Library pages" class="mt-5">
   <ul class="pagination justify-content-center">
-    {% if page > 1 %}
+    {% if assets.has_previous %}
       <li class="page-item">
-        <a class="page-link" href="?page={{ page|add:'-1' }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+        <a class="page-link" href="?type={{ media_type }}&page={{ assets.previous_page_number }}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}">Previous</a>
       </li>
     {% endif %}
-    {% for p in page_range %}
-      <li class="page-item {% if p == page %}active{% endif %}">
-        <a class="page-link" href="?page={{ p }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ p }}</a>
+    {% for p in assets.paginator.page_range %}
+      <li class="page-item {% if p == assets.number %}active{% endif %}">
+        <a class="page-link" href="?type={{ media_type }}&page={{ p }}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}">{{ p }}</a>
       </li>
     {% endfor %}
-    {% if page < total_pages %}
+    {% if assets.has_next %}
       <li class="page-item">
-        <a class="page-link" href="?page={{ page|add:'1' }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+        <a class="page-link" href="?type={{ media_type }}&page={{ assets.next_page_number }}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}">Next</a>
       </li>
     {% endif %}
   </ul>
 </nav>
+{% endif %}

@@ -49,8 +49,9 @@
               </div>
               <div class="notif-time">{{ n.created_at|timesince }} ago</div>
             </div>
-            {% if n.asset_id %}
+            {% if n.asset_available %}
               <a href="{% url 'asset_detail' n.asset_type n.asset_id %}" class="btn btn-sm btn-outline-primary rounded-pill">View</a>
+            {% elif n.asset_id %}<span class="text-muted small">Asset unavailable</span>
             {% endif %}
           </div>
         {% elif n.notif_type == 'reply' %}
@@ -66,8 +67,9 @@
               </div>
               <div class="notif-time">{{ n.created_at|timesince }} ago</div>
             </div>
-            {% if n.asset_id %}
+            {% if n.asset_available %}
               <a href="{% url 'asset_detail' n.asset_type n.asset_id %}" class="btn btn-sm btn-outline-primary rounded-pill">View</a>
+            {% elif n.asset_id %}<span class="text-muted small">Asset unavailable</span>
             {% endif %}
           </div>
         {% endif %}

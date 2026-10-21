@@ -523,6 +523,8 @@ def assemble_reel(
         fps,
         (W, H),
     )
+    if not writer.isOpened():
+        raise RuntimeError("The video encoder could not be initialized.")
 
     FADE_IN_FRAMES  = int(fps * 0.45)
     FADE_OUT_FRAMES = int(fps * 0.35)
@@ -586,6 +588,8 @@ def assemble_reel(
                 write_pil(tf)
 
     writer.release()
+    if not output_path.exists() or output_path.stat().st_size == 0:
+        raise RuntimeError("The video encoder did not produce a playable file.")
     return output_path
 
 
@@ -692,4 +696,6 @@ def save_reel_to_media(
     else:
         raw_path.replace(output_path)
         logger.info("reel_assembler: saved fallback mp4v reel at %s", output_path)
+    if not output_path.exists() or output_path.stat().st_size == 0:
+        raise RuntimeError("The final reel file was not created.")
     return f"{settings.MEDIA_URL}reels/{filename}"

@@ -2,18 +2,18 @@
 
 ReelStock is an AI‑powered product media platform built with Django.  Users can upload a single product photo and let the system automatically remove the background, generate multiple cinematic scenes around the product and assemble a polished vertical reel with premium transitions.  The application also exposes a simple image generator based on HuggingFace’s text‑to‑image API and a lightweight community library where users can publish their generated assets.
 
-This version of ReelStock includes a **fully working backend** for the product‑focused Reel Maker.  The classic static slideshow has been removed entirely; reels are now created via a CGI‑style pipeline that runs locally using Pillow and OpenCV.  The pipeline performs background removal, generates multiple scene plates (optionally using HuggingFace FLUX when a token is provided), composites your product into each scene with realistic lighting, adds Ken‑Burns‑style motion and rich transitions, and then renders the final vertical MP4.  Users can choose the approximate length of the final reel.
+This version of ReelStock includes a **fully working backend** for the product‑focused Reel Maker.  The classic static slideshow has been removed entirely; reels are now created via a CGI‑style pipeline that runs locally using Pillow and OpenCV.  The pipeline performs background removal, generates multiple scene plates (optionally using HuggingFace FLUX when a token is provided), composites your product into each scene with realistic lighting, adds Ken‑Burns‑style motion and rich transitions, and then renders the final vertical MP4.  Users can choose an exact 4, 6, or 8 second output.
 
 ## Key Features
 
 * **Home** – landing page with links to browse the library or start creating.
 * **Library** – grid of sample assets with search, category filter and pagination.  Each asset links to a detail page showing metadata and a download button.
-* **Asset Detail** – displays a large preview and metadata, links to the creator’s profile and shows other assets by the same creator.  Includes a report modal.
+* **Asset Detail** – displays a large preview and metadata, links to the creator’s profile, and shows other assets by the same creator.
 * **Creator Profile** – shows a creator’s avatar, bio and their published assets.
-* **Reel Maker** – upload one product image, pick a product type, choose an approximate duration (4 s, 6 s or 8 s) and generate a cinematic reel locally.  The pipeline removes the background, generates five different environment backdrops, composites your product with shadows and reflections, applies motion and transitions, and renders a polished MP4.
+* **Reel Maker** – upload one product image, pick a product type, choose an exact duration (4 s, 6 s or 8 s) and generate a cinematic reel locally.  The pipeline removes the background, generates five different environment backdrops, composites your product with shadows and reflections, applies motion and transitions, and renders a polished MP4.
 * **Image Generator** – enter a text prompt and optional style to generate a single still image via the HuggingFace Inference API.
 * **My Assets** – lists draft and published assets for the current user with actions to publish/unpublish.
-* **Moderation Dashboard** – staff‑only table listing all assets and reports.
+* **Moderation Dashboard** – staff-only tools for reviewing assets, wallets, engagement, analytics, and recorded admin actions.
 * **Authentication Pages** – registration and login flows powered by Django’s built‑in authentication system.
 
 ## Project Structure
@@ -21,17 +21,20 @@ This version of ReelStock includes a **fully working backend** for the product�
 The Django project follows a standard layout:
 
 ```
-reelstock_v4/
+reelstock_project/
 ├── manage.py            # Management utility
 ├── reelstock/           # Project package (settings, URLs, ASGI)
 ├── core/                # Home, auth and miscellaneous pages
 ├── libraryapp/          # Public asset browsing and details
 ├── studio/              # Creation tools: image generator and reel maker
 ├── moderation/          # Admin‑style moderation dashboard
+├── wallet/              # Reel Coins, transactions and download basket
 ├── templates/           # Global and per‑app templates
 ├── static/              # Bootstrap, custom CSS/JS and placeholder images
-├── media/               # Uploaded and generated media files
-└── data/                # JSON files containing mock assets and reports
+├── media/               # Local uploaded/generated media (Git-ignored)
+├── data/                # Legacy mock JSON retained for review
+├── docs/                # Technical project documentation
+└── .env.example         # Placeholder-only environment template
 ```
 
 Generated videos and intermediate frames are stored under the `media/` directory when running locally.  Django will serve these files automatically in DEBUG mode.
@@ -57,7 +60,6 @@ Generated videos and intermediate frames are stored under the `media/` directory
 
    * `HF_API_TOKEN` – your personal HuggingFace token used for background removal and optional scene generation.  Without this the pipeline uses local gradients.  You can obtain a token from your [HuggingFace tokens page](https://huggingface.co/settings/tokens).
    * `HF_IMAGE_MODEL` – (optional) override for the scene generator model.  Defaults to a FLUX.1‑style model.  Only used when `HF_API_TOKEN` is set.
-   * `FAL_API_KEY` – (optional) API key for fal.ai image‑to‑video.  This integration is present in the codebase but is not used by the current reel pipeline.
 
 4. **Apply database migrations** (first run only):
 
@@ -87,5 +89,5 @@ Generated videos and intermediate frames are stored under the `media/` directory
 
 * Background removal prefers the `rembg` library if installed.  If not available or you do not set `HF_API_TOKEN`, an OpenCV GrabCut fallback is used.
 * Scene generation uses HuggingFace FLUX when a token is provided.  Without a token, the system falls back to a premium radial gradient background with film grain and vignette for a polished look.
-* Hold durations are distributed evenly across the number of frames.  The duration you choose is approximate; transitions and fade‑in/out add a small amount of extra time.
+* The assembler gives holds and transitions a shared fixed frame budget, and the browser-ready export is clamped to the selected duration.
 * No external video API calls are required for the main reel pipeline; everything runs locally using Pillow and OpenCV.  The fal.ai integration remains available in the codebase for future use but is not used by default.

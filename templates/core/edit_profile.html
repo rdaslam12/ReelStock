@@ -16,30 +16,31 @@
 
     <form method="post">
       {% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-danger small">{{ form.non_field_errors }}</div>{% endif %}
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label fw-semibold small">First Name</label>
-          <input type="text" class="form-control rounded-3" name="first_name" value="{{ user.first_name }}">
+          {{ form.first_name }}{{ form.first_name.errors }}
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold small">Last Name</label>
-          <input type="text" class="form-control rounded-3" name="last_name" value="{{ user.last_name }}">
+          {{ form.last_name }}{{ form.last_name.errors }}
         </div>
         <div class="col-12">
           <label class="form-label fw-semibold small">Email</label>
-          <input type="email" class="form-control rounded-3" name="email" value="{{ user.email }}">
+          {{ form.email }}{{ form.email.errors }}
         </div>
         <div class="col-12">
           <label class="form-label fw-semibold small">Short Bio <span class="text-muted fw-normal">(max 300 chars)</span></label>
-          <textarea class="form-control rounded-3" name="bio" rows="3" maxlength="300">{{ profile.bio }}</textarea>
+          {{ form.bio }}{{ form.bio.errors }}
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold small">Location</label>
-          <input type="text" class="form-control rounded-3" name="location" value="{{ profile.location }}" placeholder="City, Country">
+          {{ form.location }}{{ form.location.errors }}
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold small">Website</label>
-          <input type="url" class="form-control rounded-3" name="website" value="{{ profile.website }}" placeholder="https://…">
+          {{ form.website }}{{ form.website.errors }}
         </div>
 
         <div class="col-12"><hr class="my-1"><p class="text-muted small fw-semibold mb-0">SOCIAL LINKS</p></div>
@@ -48,26 +49,29 @@
           <label class="form-label fw-semibold small">X (Twitter)</label>
           <div class="input-group">
             <span class="input-group-text rounded-start-3">@</span>
-            <input type="text" class="form-control rounded-end-3" name="x" value="{{ profile.x_handle }}" placeholder="username">
+            {{ form.x_handle }}
           </div>
+          {{ form.x_handle.errors }}
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold small">Instagram</label>
           <div class="input-group">
             <span class="input-group-text rounded-start-3">@</span>
-            <input type="text" class="form-control rounded-end-3" name="instagram" value="{{ profile.instagram }}" placeholder="username">
+            {{ form.instagram }}
           </div>
+          {{ form.instagram.errors }}
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold small">YouTube</label>
-          <input type="text" class="form-control rounded-3" name="youtube" value="{{ profile.youtube }}" placeholder="channel name or URL">
+          {{ form.youtube }}{{ form.youtube.errors }}
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold small">TikTok</label>
           <div class="input-group">
             <span class="input-group-text rounded-start-3">@</span>
-            <input type="text" class="form-control rounded-end-3" name="tiktok" value="{{ profile.tiktok }}" placeholder="username">
+            {{ form.tiktok }}
           </div>
+          {{ form.tiktok.errors }}
         </div>
       </div>
 

@@ -315,7 +315,7 @@ def admin_dashboard(request):
         "pending_coin_requests": CoinRequest.objects.filter(
             status=CoinRequest.STATUS_PENDING,
         ).count(),
-        "reports": AdminActionLog.objects.filter(
+        "moderation_actions": AdminActionLog.objects.filter(
             action__in=[
                 AdminActionLog.ACTION_ASSET_DELETED,
                 AdminActionLog.ACTION_ASSET_UNPUBLISHED,
@@ -639,6 +639,14 @@ def admin_asset_action(request, asset_type, asset_id, action):
             return redirect("admin_asset_detail", asset_type=asset_type, asset_id=asset.pk)
 
     if action == "publish":
+        if asset_type == "video" and (
+            asset.status != GeneratedVideo.STATUS_DONE or not asset.playback_url
+        ):
+            _flash(request, "Only completed reels with a playable file can be published.", "danger")
+            return redirect("admin_asset_detail", asset_type=asset_type, asset_id=asset.pk)
+        if asset_type == "image" and not asset.media_url:
+            _flash(request, "This image has no available media file.", "danger")
+            return redirect("admin_asset_detail", asset_type=asset_type, asset_id=asset.pk)
         asset.is_published = True
         asset.save(update_fields=["is_published"])
         record_admin_action(

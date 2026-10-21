@@ -1,6 +1,5 @@
 """Moderation application for ReelStock.
 
-Contains a simple dashboard for moderators and administrators to
-simulate reviewing assets, reports and user actions.  No database
-operations are performed in this phase.
+Contains the staff-only dashboard for reviewing users, assets, wallet
+requests, engagement metrics, and recorded moderation actions.
 """

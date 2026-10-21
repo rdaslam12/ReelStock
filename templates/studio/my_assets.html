@@ -46,6 +46,7 @@
               <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill copy-asset-link" data-url="{{ request.scheme }}://{{ request.get_host }}{{ img_detail_url }}">Copy</button>
               <a href="https://www.facebook.com/sharer/sharer.php?u={% filter urlencode %}{{ request.scheme }}://{{ request.get_host }}{{ img_detail_url }}{% endfilter %}" target="_blank" rel="noopener" class="btn btn-xs btn-primary rounded-pill">Facebook</a>
             {% endif %}
+            <button type="button" class="btn btn-xs {% if img.is_published %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill publication-toggle" data-url="{% url 'set_asset_publication' 'image' img.pk %}" data-publish="{% if img.is_published %}false{% else %}true{% endif %}">{% if img.is_published %}Unpublish{% else %}Publish{% endif %}</button>
           </div>
         </div>
       </div>
@@ -89,6 +90,7 @@
               <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill copy-asset-link" data-url="{{ request.scheme }}://{{ request.get_host }}{{ vid_detail_url }}">Copy</button>
               <a href="https://www.facebook.com/sharer/sharer.php?u={% filter urlencode %}{{ request.scheme }}://{{ request.get_host }}{{ vid_detail_url }}{% endfilter %}" target="_blank" rel="noopener" class="btn btn-xs btn-primary rounded-pill">Facebook</a>
             {% endif %}
+            <button type="button" class="btn btn-xs {% if vid.is_published %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill publication-toggle" data-url="{% url 'set_asset_publication' 'video' vid.pk %}" data-publish="{% if vid.is_published %}false{% else %}true{% endif %}">{% if vid.is_published %}Unpublish{% else %}Publish{% endif %}</button>
           </div>
         </div>
       </div>
@@ -129,6 +131,27 @@ document.querySelectorAll('.copy-asset-link').forEach(button => {
     }
     button.textContent = 'Copied';
     setTimeout(() => { button.textContent = label; }, 1400);
+  });
+});
+
+document.querySelectorAll('.publication-toggle').forEach(button => {
+  button.addEventListener('click', async () => {
+    const publish = button.dataset.publish === 'true';
+    button.disabled = true;
+    try {
+      const response = await fetch(button.dataset.url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+        body: JSON.stringify({publish})
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not update this asset.');
+      window.RSToast && RSToast.show(publish ? 'Published to the Library.' : 'Asset unpublished.', 'success');
+      window.location.reload();
+    } catch (error) {
+      button.disabled = false;
+      window.RSToast && RSToast.show(error.message || 'Could not update this asset.', 'error');
+    }
   });
 });
 </script>

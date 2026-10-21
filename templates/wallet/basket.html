@@ -124,6 +124,7 @@
         <p class="text-muted small mt-3 mb-0" style="font-size:0.78rem;">
           🔒 Your basket is saved automatically. It stays even if you refresh
           or visit other pages. It only clears when you check out or remove items.
+          Each checkout is a new Reel Coin transaction, so keep the downloaded ZIP for later use.
         </p>
       </aside>
     </div>
@@ -176,7 +177,7 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block scripts %}{{ block.super }}
 <script>
   // AJAX-removable items — fall back to plain form if JS disabled.
   document.querySelectorAll('form[data-basket-remove]').forEach(function (form) {

@@ -55,15 +55,15 @@ class CoinRequestAdmin(admin.ModelAdmin):
     Admin can approve or reject a CoinRequest with a single click.
     Approving instantly credits the user's wallet.
     """
-    list_display  = ['created_at', 'user', 'amount', 'usd_amount', 'payment_method', 'transaction_id', 'status', 'admin_note']
-    list_filter   = ['status', 'payment_method', 'created_at']
-    search_fields = ['user__username', 'user__email', 'reason', 'transaction_id']
+    list_display  = ['created_at', 'user', 'amount', 'status', 'admin_note']
+    list_filter   = ['status', 'created_at']
+    search_fields = ['user__username', 'user__email', 'reason']
     readonly_fields = ['created_at', 'resolved_at', 'resolved_by']
     actions = ['approve_requests', 'reject_requests']
 
     fieldsets = (
         ('Request', {
-            'fields': ('user', 'amount', 'usd_amount', 'payment_method', 'transaction_id', 'reason', 'created_at'),
+            'fields': ('user', 'amount', 'reason', 'created_at'),
         }),
         ('Decision', {
             'fields': ('status', 'admin_note', 'resolved_at', 'resolved_by'),

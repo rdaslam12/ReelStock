@@ -5,9 +5,11 @@ from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.db.models import Avg, Count, F
+from django.db.models import Q
 from django.http import Http404, HttpRequest, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -32,7 +34,8 @@ logger = logging.getLogger(__name__)
 
 def _json_payload(request: HttpRequest):
     try:
-        return json.loads(request.body or "{}")
+        payload = json.loads(request.body or "{}")
+        return payload if isinstance(payload, dict) else None
     except json.JSONDecodeError:
         return None
 
@@ -84,6 +87,8 @@ def _record_asset_view(request: HttpRequest, asset_type: str, asset):
 
 def library(request: HttpRequest):
     media_type = request.GET.get('type', 'images')   # 'images' | 'videos'
+    if media_type not in {'images', 'videos'}:
+        media_type = 'images'
     search = request.GET.get('search', '').strip()
     category = request.GET.get('category', '').strip()
 
@@ -92,32 +97,32 @@ def library(request: HttpRequest):
             is_published=True, status='done'
         ).select_related('user__profile')
         if search:
-            qs = qs.filter(title__icontains=search) | qs.filter(product_name__icontains=search)
+            qs = qs.filter(Q(title__icontains=search) | Q(product_name__icontains=search))
         if category:
             qs = qs.filter(category__iexact=category)
         categories = list(
             GeneratedVideo.objects.filter(is_published=True, status='done')
             .values_list('category', flat=True).distinct().order_by('category')
         )
-        assets = list(qs[:60])
+        assets = Paginator(qs, 12).get_page(request.GET.get('page'))
         logger.debug(
             "library: serving %s published videos; playback urls=%s",
-            len(assets),
-            [(v.pk, v.playback_url, v.video_file.name if v.video_file else '', v.video_url) for v in assets[:5]],
+            len(assets.object_list),
+            [(v.pk, v.playback_url, v.video_file.name if v.video_file else '', v.video_url) for v in assets.object_list[:5]],
         )
     else:
         qs = GeneratedImage.objects.filter(
             is_published=True
         ).select_related('user__profile')
         if search:
-            qs = qs.filter(title__icontains=search) | qs.filter(prompt__icontains=search)
+            qs = qs.filter(Q(title__icontains=search) | Q(prompt__icontains=search))
         if category:
             qs = qs.filter(style__iexact=category)
         categories = list(
             GeneratedImage.objects.filter(is_published=True)
             .values_list('style', flat=True).distinct().order_by('style')
         )
-        assets = list(qs[:60])
+        assets = Paginator(qs, 12).get_page(request.GET.get('page'))
 
     return render(request, 'libraryapp/library.html', {
         'assets': assets,
@@ -307,6 +312,7 @@ def post_comment(request: HttpRequest):
             pk=parent_id,
             asset_type=asset_type,
             asset_id=asset_id,
+            parent__isnull=True,
         )
 
     comment = AssetComment.objects.create(
@@ -384,6 +390,7 @@ def toggle_reaction(request: HttpRequest):
         return JsonResponse({'error': 'invalid emoji'}, status=400)
 
     comment = get_object_or_404(AssetComment, pk=comment_id)
+    _published_asset(comment.asset_type, comment.asset_id)
     existing = CommentReaction.objects.filter(
         user=request.user, comment=comment, emoji=emoji
     ).first()
@@ -489,11 +496,10 @@ def my_collections(request: HttpRequest):
     })
 
 
-@login_required
 def collection_detail(request: HttpRequest, collection_id: int):
     collection = get_object_or_404(Collection, pk=collection_id)
     if not collection.is_public and collection.user != request.user:
-        return redirect('library')
+        raise Http404("Collection not found")
 
     resolved = []
     for item in collection.items.all():
@@ -529,12 +535,14 @@ def create_collection(request: HttpRequest):
 
     name = data.get('name', '').strip()
     description = data.get('description', '').strip()
-    if not name:
+    is_public = bool(data.get('is_public', True))
+    if not name or len(name) > 100 or len(description) > 300:
         return JsonResponse({'error': 'name required'}, status=400)
     collection = Collection.objects.create(
         user=request.user,
         name=name,
         description=description,
+        is_public=is_public,
     )
     return JsonResponse({'id': collection.id, 'name': collection.name})
 
@@ -728,6 +736,30 @@ def notifications_page(request: HttpRequest):
         .select_related('actor')
         .order_by('-created_at')[:50]
     )
+    image_ids = {
+        notification.asset_id for notification in notifications
+        if notification.asset_type == 'image' and notification.asset_id
+    }
+    video_ids = {
+        notification.asset_id for notification in notifications
+        if notification.asset_type == 'video' and notification.asset_id
+    }
+    available_images = set(
+        GeneratedImage.objects.filter(pk__in=image_ids, is_published=True).values_list('pk', flat=True)
+    )
+    available_videos = set(
+        GeneratedVideo.objects.filter(
+            pk__in=video_ids,
+            is_published=True,
+            status=GeneratedVideo.STATUS_DONE,
+        ).values_list('pk', flat=True)
+    )
+    for notification in notifications:
+        notification.asset_available = (
+            notification.asset_id in available_images
+            if notification.asset_type == 'image'
+            else notification.asset_id in available_videos
+        )
     Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
     return render(request, 'libraryapp/notifications.html', {'notifs': notifications})
 

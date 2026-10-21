@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from io import BytesIO
-from typing import List, NamedTuple, Optional, Tuple
+from typing import Callable, List, NamedTuple, Optional, Tuple
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
@@ -380,7 +380,10 @@ def _hf_generate_background(
 
 # ── Public API ────────────────────────────────────────────────────────
 
-def generate_scenes(category: str) -> List[Tuple[Image.Image, Scene]]:
+def generate_scenes(
+    category: str,
+    fallback_callback: Callable[[], None] | None = None,
+) -> List[Tuple[Image.Image, Scene]]:
     """
     Generate 5 background scenes for the given product category.
     Returns a list of (PIL Image, Scene) tuples.
@@ -391,6 +394,7 @@ def generate_scenes(category: str) -> List[Tuple[Image.Image, Scene]]:
     scenes  = SCENE_PLANS.get(category, SCENE_PLANS["Other"])
     results = []
     client  = None
+    fallback_used = False
 
     if token:
         client = InferenceClient(
@@ -417,6 +421,9 @@ def generate_scenes(category: str) -> List[Tuple[Image.Image, Scene]]:
             bg = _hf_generate_background(scene.prompt, client, model)
 
         if bg is None:
+            if not fallback_used and fallback_callback:
+                fallback_callback()
+            fallback_used = True
             bg = _make_premium_gradient_bg(scene)
             if token:
                 # Only log degradation warning when AI was actually attempted

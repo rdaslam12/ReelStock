@@ -134,18 +134,16 @@ SOCIALACCOUNT_PROVIDERS = {
 HF_API_TOKEN = os.environ.get('HF_API_TOKEN', '').strip()
 HF_IMAGE_MODEL = os.environ.get('HF_IMAGE_MODEL', 'black-forest-labs/FLUX.1-schnell').strip()
 HF_IMAGE_TIMEOUT = int(os.environ.get('HF_IMAGE_TIMEOUT', '60'))
-#HF VIDEO
-# We already loaded the environment file at the top of this module. Avoid
-# re-loading it here to prevent unexpected overrides. The following block
-# previously redefined BASE_DIR and invoked load_dotenv() again. It has been
-# removed for clarity.
-# HF text-to-video
-TEXT_VIDEO_MODEL = os.environ.get('TEXT_VIDEO_MODEL', 'ali-vilab/text-to-video-ms-1.7b')
-TEXT_VIDEO_API = os.environ.get('TEXT_VIDEO_API', 'huggingface')
-TEXT_VIDEO_TIMEOUT = int(os.environ.get('TEXT_VIDEO_TIMEOUT', '120'))
-
-# Fal.ai video generation
-FAL_API_KEY = os.environ.get('FAL_API_KEY', '').strip()
+# Cloudflare Workers AI
+CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
+CLOUDFLARE_AI_TOKEN = os.environ.get("CLOUDFLARE_AI_TOKEN", "").strip()
+CLOUDFLARE_IMAGE_MODEL = os.environ.get(
+    "CLOUDFLARE_IMAGE_MODEL",
+    "@cf/black-forest-labs/flux-1-schnell",
+).strip()
+CLOUDFLARE_IMAGE_TIMEOUT = int(
+    os.environ.get("CLOUDFLARE_IMAGE_TIMEOUT", "90")
+)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

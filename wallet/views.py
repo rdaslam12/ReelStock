@@ -19,7 +19,6 @@ import json
 import logging
 import os
 import zipfile
-from decimal import Decimal
 from urllib.parse import urlparse
 
 import requests
@@ -128,6 +127,8 @@ def basket_add(request):
         payload = json.loads(request.body or '{}')
     except json.JSONDecodeError:
         return JsonResponse({'ok': False, 'message': 'Invalid request.'}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({'ok': False, 'message': 'Invalid request.'}, status=400)
 
     asset_type = (payload.get('asset_type') or '').strip().lower()
     asset_id   = payload.get('asset_id')
@@ -144,7 +145,7 @@ def basket_add(request):
             }, status=400)
         item, created = BasketItem.objects.get_or_create(
             user=request.user, image=asset,
-            defaults={'coin_price_snapshot': max(asset.coin_price, 40)},
+            defaults={'coin_price_snapshot': asset.coin_price or 40},
         )
     else:
         asset = get_object_or_404(GeneratedVideo, pk=asset_id, is_published=True, status='done')
@@ -155,7 +156,7 @@ def basket_add(request):
             }, status=400)
         item, created = BasketItem.objects.get_or_create(
             user=request.user, video=asset,
-            defaults={'coin_price_snapshot': max(asset.coin_price, 100)},
+            defaults={'coin_price_snapshot': asset.coin_price or 100},
         )
 
     count = BasketItem.objects.filter(user=request.user).count()
@@ -265,10 +266,10 @@ def basket_confirm(request):
                 zf.writestr(name, data)
                 files_written += 1
 
-        if files_written == 0:
+        if files_written != len(items):
             messages.error(
                 request,
-                "None of the selected files could be read, so no coins were deducted.",
+                "One or more selected files are unavailable, so no coins were deducted. Remove the unavailable item and try again.",
             )
             return redirect('basket_page')
 
@@ -286,6 +287,14 @@ def basket_confirm(request):
     try:
         with db_transaction.atomic():
             wallet = Wallet.objects.select_for_update().get(user=request.user)
+            current_ids = list(
+                BasketItem.objects.select_for_update()
+                .filter(user=request.user)
+                .values_list('pk', flat=True)
+            )
+            if set(current_ids) != {item.pk for item in items}:
+                messages.warning(request, "Your basket changed during checkout. Please review it and try again.")
+                return redirect('basket_page')
             if wallet.balance < total:
                 messages.error(
                     request,
@@ -368,20 +377,14 @@ def request_coins(request):
         amount = int(request.POST.get('amount', '0'))
     except (TypeError, ValueError):
         amount = 0
-    payment_method = (request.POST.get('payment_method') or CoinRequest.PAYMENT_PAYPAL).strip().lower()
-    transaction_id = (request.POST.get('transaction_id') or '').strip()
     reason = (request.POST.get('reason') or '').strip()
 
     if amount <= 0 or amount > 10_000:
         messages.error(request, "Please request between 1 and 10,000 coins.")
         return redirect('wallet_page')
 
-    valid_methods = {choice[0] for choice in CoinRequest.PAYMENT_CHOICES}
-    if payment_method not in valid_methods:
-        payment_method = CoinRequest.PAYMENT_PAYPAL
-
-    if not transaction_id:
-        messages.error(request, "Please enter your payment transaction or confirmation ID.")
+    if len(reason) > 1000:
+        messages.error(request, "Please keep the request note under 1,000 characters.")
         return redirect('wallet_page')
 
     # Prevent spamming — at most one pending request at a time
@@ -395,18 +398,13 @@ def request_coins(request):
         )
         return redirect('wallet_page')
 
-    usd_amount = (Decimal(amount) / Decimal('50')).quantize(Decimal('0.01'))
     CoinRequest.objects.create(
         user=request.user,
         amount=amount,
         reason=reason,
-        payment_method=payment_method,
-        transaction_id=transaction_id,
-        usd_amount=usd_amount,
     )
-    method_display = dict(CoinRequest.PAYMENT_CHOICES).get(payment_method, payment_method)
     messages.success(
         request,
-        f"Payment request submitted. Admin will verify your {method_display} transaction and add {amount} RC once approved.",
+        f"Demo credit request submitted. An admin will review your request for {amount} RC.",
     )
     return redirect('wallet_page')

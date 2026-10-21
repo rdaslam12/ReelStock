@@ -74,7 +74,7 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}
+{% block scripts %}{{ block.super }}
 <script>
 document.querySelectorAll('.bookmark-remove-btn').forEach(btn => {
   btn.addEventListener('click', async function() {
@@ -87,8 +87,11 @@ document.querySelectorAll('.bookmark-remove-btn').forEach(btn => {
         headers: {'Content-Type':'application/json','X-CSRFToken': getCookie('csrftoken')},
         body: JSON.stringify({asset_type: assetType, asset_id: parseInt(assetId)})
       });
-      if (res.ok) card.remove();
-    } catch(e) {}
+      if (res.ok) { card.remove(); return; }
+      window.RSToast && RSToast.show('Could not remove the bookmark.', 'error');
+    } catch(e) {
+      window.RSToast && RSToast.show('Could not remove the bookmark.', 'error');
+    }
   });
 });
 function getCookie(name) {

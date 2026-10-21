@@ -15,11 +15,11 @@
     </div>
 
     <div class="btn-group shadow-sm align-self-start" role="group">
-      <a href="?type=images{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}"
+      <a href="?type=images{% if search_query %}&search={{ search_query|urlencode }}{% endif %}"
          class="btn {% if media_type == 'images' %}btn-primary{% else %}btn-outline-primary{% endif %} px-4 py-2">
         🖼 Photos
       </a>
-      <a href="?type=videos{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}"
+      <a href="?type=videos{% if search_query %}&search={{ search_query|urlencode }}{% endif %}"
          class="btn {% if media_type == 'videos' %}btn-primary{% else %}btn-outline-primary{% endif %} px-4 py-2">
         🎬 Videos
       </a>
@@ -157,11 +157,17 @@
         {% endif %}
       {% endfor %}
     </div>
+    {% include 'libraryapp/_pagination.html' %}
   {% else %}
     <div class="text-center py-5 reveal-up">
       <div style="font-size:3.5rem;">{% if media_type == 'videos' %}🎬{% else %}🖼{% endif %}</div>
-      <h4 class="mt-3 mb-2">No {{ media_type }} published yet</h4>
-      <p class="text-muted mb-4">Be the first — generate and publish your creation.</p>
+      {% if search_query or current_category %}
+        <h4 class="mt-3 mb-2">No matching {{ media_type }}</h4>
+        <p class="text-muted mb-4">Try a different search or reset the filters.</p>
+      {% else %}
+        <h4 class="mt-3 mb-2">No {{ media_type }} published yet</h4>
+        <p class="text-muted mb-4">Be the first — generate and publish your creation.</p>
+      {% endif %}
       <a href="{% if media_type == 'videos' %}{% url 'create' %}{% else %}{% url 'prompt_to_image' %}{% endif %}"
          class="btn btn-primary rounded-pill px-5">Create Now</a>
     </div>

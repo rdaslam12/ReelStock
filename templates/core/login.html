@@ -7,12 +7,6 @@
     <h2 class="auth-heading">Welcome back</h2>
     <p class="auth-sub">Sign in with your email or username</p>
 
-    {% if messages %}
-      {% for msg in messages %}
-        <div class="alert alert-danger rounded-3 py-2 small">{{ msg }}</div>
-      {% endfor %}
-    {% endif %}
-
     <form method="post" onsubmit="showAuthOverlay('Signing in…')">
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ request.GET.next }}">

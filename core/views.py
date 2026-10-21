@@ -1,16 +1,29 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from django.contrib import messages
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.http import url_has_allowed_host_and_scheme
 
-from .forms import CompleteProfileForm
+from .forms import CompleteProfileForm, EditProfileForm
 from .models import UserProfile, GeneratedImage, GeneratedVideo, BlogPost, FeaturedAsset
 
 
 # ── Auth ──────────────────────────────────────────────────────────────
+
+def _safe_next_url(request, value, fallback='home'):
+    if value and url_has_allowed_host_and_scheme(
+        value,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return value
+    return fallback
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -39,8 +52,8 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            next_url = request.POST.get('next') or request.GET.get('next') or '/'
-            return redirect(next_url)
+            next_url = request.POST.get('next') or request.GET.get('next')
+            return redirect(_safe_next_url(request, next_url))
         else:
             messages.error(request, 'Invalid email/username or password.')
     return render(request, 'core/login.html')
@@ -63,7 +76,7 @@ def social_login_start(request, provider):
     except Exception:
         has_app = False
     if not has_app:
-        messages.error(request, f'{provider.title()} login is not configured yet. Add its SocialApp in Django admin.')
+        messages.error(request, 'Google sign-in is temporarily unavailable. Please use email and password instead.')
         return redirect('login')
     return redirect(f'/accounts/{provider}/login/')
 
@@ -78,17 +91,27 @@ def register_view(request):
         password   = request.POST.get('password', '')
         password2  = request.POST.get('password2', '')
 
+        validation_error = None
+        try:
+            validate_email(email)
+            validate_password(password)
+        except ValidationError as exc:
+            validation_error = ' '.join(exc.messages)
+
         if not first_name or not email or not password:
             messages.error(request, 'First name, email and password are required.')
+        elif len(first_name) > 150 or len(last_name) > 150:
+            messages.error(request, 'First and last names must be 150 characters or fewer.')
+        elif validation_error:
+            messages.error(request, validation_error)
         elif password != password2:
             messages.error(request, 'Passwords do not match.')
-        elif len(password) < 8:
-            messages.error(request, 'Password must be at least 8 characters.')
         elif User.objects.filter(email__iexact=email).exists():
             messages.error(request, 'An account with this email already exists.')
         else:
             # derive username from email prefix, ensure uniqueness
-            base = email.split('@')[0].lower().replace('.', '_')
+            import re
+            base = (re.sub(r'[^a-z0-9_]+', '_', email.split('@')[0].lower()).strip('_') or 'creator')[:140]
             username = base
             n = 1
             while User.objects.filter(username=username).exists():
@@ -123,7 +146,7 @@ def complete_profile(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Profile completed. Welcome in.')
-            return redirect(request.GET.get('next') or 'home')
+            return redirect(_safe_next_url(request, request.GET.get('next')))
     else:
         form = CompleteProfileForm(user=request.user)
     return render(request, 'core/complete_profile.html', {
@@ -201,18 +224,11 @@ def account_page(request):
 def edit_profile(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
-        request.user.first_name = request.POST.get('first_name', '').strip()
-        request.user.last_name  = request.POST.get('last_name', '').strip()
-        request.user.email      = request.POST.get('email', '').strip()
-        request.user.save()
-        profile.bio       = request.POST.get('bio', '').strip()
-        profile.location  = request.POST.get('location', '').strip()
-        profile.website   = request.POST.get('website', '').strip()
-        profile.x_handle  = request.POST.get('x', '').strip()
-        profile.instagram = request.POST.get('instagram', '').strip()
-        profile.youtube   = request.POST.get('youtube', '').strip()
-        profile.tiktok    = request.POST.get('tiktok', '').strip()
-        profile.save()
-        messages.success(request, 'Profile updated.')
-        return redirect('account')
-    return render(request, 'core/edit_profile.html', {'profile': profile})
+        form = EditProfileForm(request.POST, instance=profile, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated.')
+            return redirect('account')
+    else:
+        form = EditProfileForm(instance=profile, user=request.user)
+    return render(request, 'core/edit_profile.html', {'profile': profile, 'form': form})

@@ -1,2 +1,59 @@
-RunEnv.txt
+# Environment
 .env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Django local database
+db.sqlite3
+db.sqlite3-journal
+
+# Local user/generated media
+media/
+
+# Static collection output
+staticfiles/
+
+# Logs
+*.log
+logs/
+
+# Test and tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build and package artifacts
+build/
+dist/
+*.egg-info/
+
+# Temporary and local scratch files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+RunEnv.txt

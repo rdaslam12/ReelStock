@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import List
+from typing import Callable, List
 from uuid import uuid4
 
 import numpy as np
@@ -95,6 +95,8 @@ def generate_variations(
     source_path: str | Path,
     category: str = "Other",
     save_dir: str | Path | None = None,
+    stage_callback: Callable[[str], None] | None = None,
+    fallback_callback: Callable[[], None] | None = None,
 ) -> List[Path]:
     """
     Full pipeline: bg removal → scene generation → compositing → save.
@@ -111,6 +113,8 @@ def generate_variations(
     saved_paths: List[Path] = []
 
     # ── Frame 0: original product on dark studio bg ───────────────────
+    if stage_callback:
+        stage_callback("Preparing the uploaded product image…")
     logger.info(f"variation_generator [{run_id}]: preparing original frame")
     original_frame = _prepare_original_frame(source_path)
     frame0_path = save_dir / f"{run_id}_frame_00_original.png"
@@ -119,15 +123,21 @@ def generate_variations(
     logger.info(f"variation_generator [{run_id}]: frame 0 saved")
 
     # ── Remove background ─────────────────────────────────────────────
+    if stage_callback:
+        stage_callback("Removing the product background…")
     logger.info(f"variation_generator [{run_id}]: removing background")
     product_rgba = remove_background(source_path)
     logger.info(f"variation_generator [{run_id}]: background removed → {product_rgba.size}")
 
     # ── Generate scenes + composite ───────────────────────────────────
+    if stage_callback:
+        stage_callback("Generating five cinematic scene backgrounds…")
     logger.info(f"variation_generator [{run_id}]: generating empty {category} studio background plates")
-    scene_results = generate_scenes(category)
+    scene_results = generate_scenes(category, fallback_callback=fallback_callback)
 
     for i, (bg_img, scene) in enumerate(scene_results):
+        if stage_callback:
+            stage_callback(f"Compositing scene {i + 1} of {len(scene_results)}…")
         logger.info(f"variation_generator [{run_id}]: compositing frame {i+1} — {scene.name}")
         composited = composite(
             product_rgba=product_rgba,

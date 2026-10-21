@@ -5,7 +5,7 @@
 
   <div class="d-flex align-items-center justify-content-between mb-2 reveal-up">
     <div>
-      <a href="{% url 'my_collections' %}" class="text-muted small text-decoration-none">← Collections</a>
+      <a href="{% if is_owner %}{% url 'my_collections' %}{% else %}{% url 'creator_profile' collection.user.username %}{% endif %}" class="text-muted small text-decoration-none">← {% if is_owner %}Collections{% else %}Creator{% endif %}</a>
       <h2 class="fw-bold mb-0 mt-1">📁 {{ collection.name }}</h2>
       {% if collection.description %}<p class="text-muted mb-0">{{ collection.description }}</p>{% endif %}
     </div>
@@ -81,7 +81,7 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}
+{% block scripts %}{{ block.super }}
 <script>
 function getCookie(n){const v=document.cookie.match('(^|;) ?'+n+'=([^;]*)(;|$)');return v?v[2]:null;}
 

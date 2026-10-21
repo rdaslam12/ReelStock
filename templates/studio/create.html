@@ -69,7 +69,7 @@
         <div class="duration-grid">
           <div class="duration-item active" data-duration="4">4s</div>
           <div class="duration-item" data-duration="6">6s</div>
-          <div class="duration-item" data-duration="9">9s</div>
+          <div class="duration-item" data-duration="8">8s</div>
         </div>
         <input type="hidden" id="selected-duration" value="4">
       </div>
@@ -111,7 +111,7 @@
           <div class="reel-feature">Ken Burns + zoom morph, whip-pan &amp; flash cuts</div>
           <div class="reel-feature">Timed animated captions rendered into the MP4</div>
           <div class="reel-feature">Scene-aware spotlight &amp; shadow compositing</div>
-          <div class="reel-feature">4s, 6s, or 9s exact export — fully local, no video API needed</div>
+          <div class="reel-feature">4s, 6s, or 8s exact export — fully local, no video API needed</div>
         </div>
         {% if user.is_authenticated %}
           <button type="button" id="generateBtn" class="btn-generate-premium w-100">Generate Reel</button>
@@ -603,8 +603,15 @@ document.addEventListener("DOMContentLoaded", function () {
       "<br><small class='text-muted'>Check that your image is clear and try again.</small>";
     errorMsg.style.display = "block";
     loaderOverlay.style.display = "none";
-    if (pollInterval)  clearInterval(pollInterval);
-    if (progressTimer) clearInterval(progressTimer);
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+
+    if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+    }
     if (generateBtn) {
       generateBtn.disabled = false;
       generateBtn.textContent = "Generate Reel";
@@ -613,8 +620,15 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function showDone(videoUrl) {
-    if (pollInterval)  clearInterval(pollInterval);
-    if (progressTimer) clearInterval(progressTimer);
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+
+    if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+    }
     loaderOverlay.style.display = "none";
     dotDone("dot-bg"); dotDone("dot-scenes"); dotDone("dot-composite"); dotDone("dot-video");
     setProgress(100, "COMPLETED!");
@@ -657,6 +671,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const d = await r.json();
         if (d.status === "done") {
           showDone(d.playback_url || d.video_url || d.media_url);
+          if (d.note) {
+            window.RSToast && RSToast.show(d.note, "info");
+          }
         } else if (d.status === "failed") {
           showError(d.error || "Generation failed. Please try again.");
         } else {
