@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="{% static 'css/wallet.css' %}"/>
   <link rel="stylesheet" href="{% static 'css/rs-improvements.css' %}"/>
   <link rel="stylesheet" href="{% static 'css/theme.css' %}"/>
+  {% block extra_head %}{% endblock %}
+  <link rel="stylesheet" href="{% static 'css/navbar.css' %}"/>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
@@ -24,10 +26,13 @@
 <!-- Floating toast container used by basket actions -->
 <div id="rs-toast-container" aria-live="polite" aria-atomic="true"></div>
 
-<nav class="navbar fixed-top glass-nav">
-  <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
-    <a class="navbar-brand fs-4 mb-0 text-dark text-decoration-none" href="{% url 'home' %}" style="letter-spacing:-0.5px;">
-      <span class="text-primary">Reel</span>Stock
+<nav class="navbar fixed-top glass-nav rs-global-nav" aria-label="Primary navigation">
+  <div class="container-fluid rs-navbar-inner">
+    <a class="navbar-brand rs-navbar-brand" href="{% url 'home' %}" aria-label="ReelStock home">
+      <span class="rs-brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 28 28" fill="none"><path d="M8.5 7.5h7.2a4.8 4.8 0 0 1 0 9.6H8.5V7.5Z" stroke="currentColor" stroke-width="2"/><path d="m14.5 17 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M20.5 5v4M18.5 7h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </span>
+      <span class="rs-brand-word"><span>Reel</span>Stock</span>
     </a>
     <div class="nav-pills-wrap nav-desktop">
       <ul class="navbar-nav flex-row align-items-center gap-1 m-0 p-1 nav-pills-inner">
@@ -49,29 +54,30 @@
         </li>
       </ul>
     </div>
-    <div class="d-flex align-items-center gap-2 nav-actions-desktop">
+    <div class="nav-actions-desktop rs-navbar-actions">
       {% if user.is_authenticated %}
-        <a href="{% url 'notifications' %}" class="btn btn-outline-secondary rounded-circle position-relative notif-bell-btn" title="Notifications" style="width:38px;height:38px;padding:0;display:flex;align-items:center;justify-content:center;">
-          🔔
+        <a href="{% url 'notifications' %}" class="rs-nav-icon-button notif-bell-btn" aria-label="Notifications" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
         </a>
 
-        <a href="{% url 'wallet_page' %}" class="coin-pill" title="Your Reel Coin balance">
-          <span class="coin-pill-icon">🪙</span>
+        <a href="{% url 'wallet_page' %}" class="coin-pill rs-wallet-pill" title="Your Reel Coin balance" aria-label="Wallet balance: {{ wallet_balance }} Reel Coins">
+          <span class="coin-pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="6" rx="7" ry="3" stroke="currentColor" stroke-width="1.7"/><path d="M5 6v5c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5" stroke="currentColor" stroke-width="1.7"/></svg></span>
           <span class="coin-pill-amount" id="navCoinBalance">{{ wallet_balance }}</span>
           <span class="coin-pill-label">RC</span>
         </a>
 
-        <a href="{% url 'basket_page' %}" class="basket-btn" title="Download Basket">
-          <span class="basket-icon">🧺</span>
+        <a href="{% url 'basket_page' %}" class="basket-btn rs-nav-icon-button" title="Download basket" aria-label="Download basket with {{ basket_count }} items">
+          <span class="basket-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 9h16l-1.2 10H5.2L4 9ZM8 9l4-6 4 6M9 13v3M15 13v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <span class="basket-badge {% if not basket_count %}is-empty{% endif %}" id="navBasketCount">{{ basket_count }}</span>
         </a>
 
-        <div class="dropdown">
-          <button class="btn btn-primary px-3 rounded-pill shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            {{ user.first_name|default:user.username }}
+        <div class="dropdown rs-profile-menu">
+          <button class="rs-profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="rs-profile-avatar" aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span>
+            <span class="rs-profile-name">{{ user.first_name|default:user.username }}</span>
           </button>
-          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3">
+          <ul class="dropdown-menu dropdown-menu-end rs-navbar-menu">
             <li><a class="dropdown-item py-2" href="{% url 'account' %}">My Profile</a></li>
             <li><a class="dropdown-item py-2" href="{% url 'my_assets' %}">My Assets</a></li>
             <li><a class="dropdown-item py-2" href="{% url 'following_feed' %}">Following Feed</a></li>
@@ -87,18 +93,15 @@
           </ul>
         </div>
       {% else %}
-        <button class="btn btn-outline-primary px-4 rounded-pill" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
-        <button class="btn btn-primary px-4 rounded-pill" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</button>
+        <button class="rs-auth-button rs-auth-button-secondary" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
+        <button class="rs-auth-button rs-auth-button-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</button>
       {% endif %}
     </div>
-    <button class="theme-toggle-btn" id="themeToggleBtn" type="button" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">
-      <span class="theme-toggle-icon" id="themeIcon">🌙</span>
-    </button>
     <div class="dropdown nav-more-dropdown">
-      <button class="btn btn-outline-primary rounded-circle nav-more-btn" type="button" data-bs-toggle="dropdown" aria-label="Open navigation menu">
-        ⋯
+      <button class="nav-more-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open navigation menu">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
       </button>
-      <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3">
+      <ul class="dropdown-menu dropdown-menu-end rs-navbar-menu rs-mobile-menu">
         <li><a class="dropdown-item py-2" href="{% url 'library' %}">Library</a></li>
         <li><a class="dropdown-item py-2" href="{% url 'trending' %}">Trending</a></li>
         <li><a class="dropdown-item py-2" href="{% url 'create' %}">Reel Maker</a></li>
@@ -354,30 +357,6 @@ window.RSToast = {
     }, duration);
   }
 };
-</script>
-<script>
-/* ── Theme System ──────────────────────────────────────────── */
-(function() {
-  const saved = localStorage.getItem('rs-theme') || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
-  const icon = document.getElementById('themeIcon');
-  if (icon) icon.textContent = saved === 'dark' ? '☀️' : '🌙';
-})();
-
-function toggleTheme() {
-  const html = document.documentElement;
-  const current = html.getAttribute('data-theme') || 'light';
-  const next = current === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', next);
-  localStorage.setItem('rs-theme', next);
-  const icon = document.getElementById('themeIcon');
-  if (icon) icon.textContent = next === 'dark' ? '☀️' : '🌙';
-  const btn = document.getElementById('themeToggleBtn');
-  if (btn) {
-    btn.classList.add('theme-toggle-spin');
-    setTimeout(() => btn.classList.remove('theme-toggle-spin'), 400);
-  }
-}
 </script>
 </body>
 </html>

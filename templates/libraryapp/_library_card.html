@@ -1,0 +1,55 @@
+<article class="lib-card library-asset-card">
+  <a href="{% if media_type == 'images' %}{% url 'asset_detail' 'image' asset.pk %}{% else %}{% url 'asset_detail' 'video' asset.pk %}{% endif %}"
+     class="library-card-media-link"
+     aria-label="View {{ asset.display_title }}">
+    <div class="lib-card-media {% if media_type == 'videos' %}lib-card-video{% endif %}">
+      {% if media_type == 'images' %}
+        <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+      {% elif asset.playback_url %}
+        <video src="{{ asset.playback_url }}" muted loop playsinline preload="none"
+               {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
+               aria-label="{{ asset.display_title }}"
+               onmouseenter="if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) this.play().catch(function(){});"
+               onmouseleave="this.pause();this.currentTime=0;"></video>
+      {% elif asset.source_media_url %}
+        <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+      {% endif %}
+      <span class="library-media-type">{% if media_type == 'videos' %}Video{% else %}Image{% endif %}</span>
+      <span class="library-media-price">{{ asset.coin_price }} RC</span>
+      <span class="library-media-view" aria-hidden="true">{% if media_type == 'videos' %}View reel{% else %}View image{% endif %}</span>
+    </div>
+  </a>
+  <div class="library-card-body">
+    <div class="library-card-details">
+      {% if media_type == 'images' %}
+        {% if asset.style %}<span class="library-card-category">{{ asset.style }}</span>{% endif %}
+      {% else %}
+        {% if asset.category %}<span class="library-card-category">{{ asset.category }}</span>{% endif %}
+      {% endif %}
+      <span class="library-card-views">{{ asset.view_count }} view{{ asset.view_count|pluralize }}</span>
+    </div>
+    <h3 class="library-card-title">
+      <a href="{% if media_type == 'images' %}{% url 'asset_detail' 'image' asset.pk %}{% else %}{% url 'asset_detail' 'video' asset.pk %}{% endif %}">{{ asset.display_title }}</a>
+    </h3>
+    <div class="library-card-creator">
+      <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
+           class="lib-avatar" alt="" loading="lazy">
+      <span>{{ asset.user.get_full_name|default:asset.user.username }}</span>
+    </div>
+    <div class="library-card-footer">
+      {% if user.is_authenticated and user.id == asset.user_id %}
+        <button class="btn-basket is-in-basket" type="button" disabled title="Your own asset">Yours</button>
+      {% elif media_type == 'images' and asset.pk in basket_image_ids %}
+        <button class="btn-basket is-in-basket" type="button"
+                data-asset-type="image" data-asset-id="{{ asset.pk }}" disabled>In Basket</button>
+      {% elif media_type == 'videos' and asset.pk in basket_video_ids %}
+        <button class="btn-basket is-in-basket" type="button"
+                data-asset-type="video" data-asset-id="{{ asset.pk }}" disabled>In Basket</button>
+      {% else %}
+        <button class="btn-basket" type="button"
+                data-asset-type="{% if media_type == 'images' %}image{% else %}video{% endif %}"
+                data-asset-id="{{ asset.pk }}">Add to Basket</button>
+      {% endif %}
+    </div>
+  </div>
+</article>

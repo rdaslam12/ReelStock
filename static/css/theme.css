@@ -11,6 +11,8 @@
   --rs-border: rgba(0, 0, 0, .08);
   --rs-border-input: #dee2e6;
   --rs-shadow-card: 0 2px 12px rgba(0, 0, 0, .06);
+  --rs-shadow-hover: 0 9px 24px rgba(15, 23, 42, .10);
+  --rs-focus-ring: rgba(91, 124, 250, .24);
 }
 
 [data-theme="dark"] {
@@ -25,7 +27,45 @@
   --rs-border: rgba(255, 255, 255, .09);
   --rs-border-input: rgba(255, 255, 255, .14);
   --rs-shadow-card: 0 2px 16px rgba(0, 0, 0, .34);
+  --rs-shadow-hover: 0 9px 24px rgba(0, 0, 0, .38);
+  --rs-focus-ring: rgba(165, 180, 252, .36);
 }
+
+/* Keep Bootstrap controls aligned with the existing ReelStock cards. */
+.form-control:not(.form-control-sm),
+.form-select:not(.form-select-sm) {
+  min-height: 40px;
+  border-radius: 10px;
+}
+
+.form-control,
+.form-select,
+.input-group-text {
+  border-color: var(--rs-border-input);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.form-control:focus,
+.form-select:focus,
+.glass-input:focus,
+.glass-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--rs-focus-ring);
+}
+
+.btn:focus-visible,
+a:focus-visible,
+button:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.form-label { font-weight: 600; }
+
+.btn:disabled,
+.btn.disabled { box-shadow: none; cursor: not-allowed; }
 
 body {
   background-color: var(--rs-bg) !important;

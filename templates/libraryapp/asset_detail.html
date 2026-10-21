@@ -1,165 +1,190 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}{{ asset.display_title }} – ReelStock{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/asset-detail.css' %}">
+{% endblock %}
 {% block content %}
-<div class="container py-5" style="max-width:1100px;">
-  <a href="{% url 'library' %}?type={{ asset_type }}s" class="btn btn-outline-secondary btn-sm rounded-pill mb-4">← Back to Library</a>
+<div class="asset-view-page">
+  <nav class="asset-view-breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'library' %}?type={{ asset_type }}s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 5-7 7 7 7"/><path d="M7 12h13"/></svg>
+      Back to {% if asset_type == 'video' %}videos{% else %}images{% endif %}
+    </a>
+    <span aria-hidden="true">/</span>
+    <span>{{ asset.display_title|truncatechars:35 }}</span>
+  </nav>
 
-  <div class="row g-5">
-    <div class="col-lg-7">
-      <div class="asset-detail-media rounded-4 overflow-hidden shadow">
-        {% if asset_type == 'video' %}
-          {% if asset.playback_url %}
-            <video src="{{ asset.playback_url }}" controls loop playsinline preload="metadata"
-                   {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
-                   class="w-100" style="max-height:520px;object-fit:contain;background:#000;"></video>
-          {% elif asset.source_media_url %}
-            <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" class="w-100" style="max-height:520px;object-fit:contain;background:#111;">
-          {% endif %}
-        {% else %}
-          <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" class="w-100" style="max-height:520px;object-fit:contain;background:#f8f8f8;">
-        {% endif %}
-      </div>
-
-      <div class="rating-block mt-3 d-flex align-items-center gap-3 flex-wrap">
-        <div class="star-display" id="avgStars">
-          {% for i in "12345" %}
-            <span class="star-icon {% if avg_rating >= forloop.counter %}filled{% endif %}">&#9733;</span>
-          {% endfor %}
-        </div>
-        <span class="text-muted small">
-          <strong id="avgVal">{{ avg_rating }}</strong> / 5
-          (<span id="ratingCount">{{ rating_count }}</span> rating{{ rating_count|pluralize }})
-        </span>
-      </div>
-
-      {% if user.is_authenticated %}
-      <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
-        <span class="text-muted small">Your rating:</span>
-        <div class="star-input" id="starInput" data-asset-type="{{ asset_type }}" data-asset-id="{{ asset.pk }}">
-          {% for i in "12345" %}
-            <button class="star-btn {% if user_rating and user_rating >= forloop.counter %}active{% endif %}"
-                    data-val="{{ forloop.counter }}" type="button">&#9733;</button>
-          {% endfor %}
-        </div>
-        <span class="text-muted small" id="yourRatingLabel">
-          {% if user_rating %}You rated {{ user_rating }}★{% else %}Not rated yet{% endif %}
-        </span>
-      </div>
-      {% else %}
-      <p class="text-muted small mt-2">
-        <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a> to rate this {{ asset_type }}.
-      </p>
-      {% endif %}
-    </div>
-
-    <div class="col-lg-5">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <span class="badge bg-primary rounded-pill">{{ asset_type|title }}</span>
-        {% if asset_type == 'video' %}
-          <span class="badge bg-secondary rounded-pill">{{ asset.category }}</span>
-        {% else %}
-          {% if asset.style %}<span class="badge bg-secondary rounded-pill">{{ asset.style }}</span>{% endif %}
-        {% endif %}
-      </div>
-
-      <h2 class="fw-bold mb-3">{{ asset.display_title }}</h2>
-
-      {% if asset_type == 'image' and asset.prompt %}
-        <div class="bg-light rounded-3 p-3 mb-4">
-          <div class="text-muted small fw-semibold mb-1">PROMPT</div>
-          <p class="mb-0 small">{{ asset.prompt }}</p>
-        </div>
-      {% endif %}
-
-      <a href="{% url 'creator_profile' asset.user.username %}" class="text-decoration-none">
-        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border bg-white shadow-sm mb-4 creator-hover-card">
-          <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
-               class="rounded-circle" width="48" height="48" alt="{{ asset.user.username }}">
-          <div>
-            <div class="fw-bold">{{ asset.user.get_full_name|default:asset.user.username }}</div>
-            <div class="text-muted small">@{{ asset.user.username }}
-              {% if profile.bio %} · {{ profile.bio|truncatechars:50 }}{% endif %}
-            </div>
-          </div>
-          <span class="ms-auto text-muted small">View profile →</span>
-        </div>
-      </a>
-
-      <div class="asset-stat-row text-muted small mb-3">
-        <span>Published {{ asset.created_at|date:"F j, Y" }}</span>
-        <span>👁 {{ asset.view_count }} view{{ asset.view_count|pluralize }}</span>
-      </div>
-
-      <div class="asset-price-box">
-        <div>
-          <div class="asset-price-label">Download Price</div>
-          <div class="asset-price-value">
-            <span>🪙</span>
-            <span>{{ asset.coin_price }}</span>
-            <small style="font-size:0.85rem;opacity:0.7;font-weight:600;">RC</small>
-          </div>
-        </div>
-        {% if user.is_authenticated %}
-          <span class="text-muted small">
-            Your balance: <strong>🪙 {{ wallet_balance }}</strong>
-          </span>
-        {% endif %}
-      </div>
-
-      <div class="d-flex flex-wrap gap-2 align-items-center">
-        {% if user.is_authenticated and user.id == asset.user_id %}
-          {% if asset_type == 'video' and asset.playback_url %}
-            <a href="{{ asset.playback_url }}" target="_blank" class="btn btn-success rounded-pill px-5">⬇ Download (it's yours, free)</a>
-          {% elif asset_type == 'image' %}
-            <a href="{{ asset.media_url }}" download class="btn btn-success rounded-pill px-5">⬇ Download (it's yours, free)</a>
-          {% endif %}
-        {% elif asset_type == 'image' and asset.pk in basket_image_ids %}
-          <button class="btn-basket btn-basket-large is-in-basket" disabled>✓ Already in Basket</button>
-          <a href="{% url 'basket_page' %}" class="btn btn-outline-primary rounded-pill px-4">View Basket</a>
-        {% elif asset_type == 'video' and asset.pk in basket_video_ids %}
-          <button class="btn-basket btn-basket-large is-in-basket" disabled>✓ Already in Basket</button>
-          <a href="{% url 'basket_page' %}" class="btn btn-outline-primary rounded-pill px-4">View Basket</a>
-        {% else %}
-          <button type="button" class="btn-basket btn-basket-large"
-                  data-asset-type="{{ asset_type }}"
-                  data-asset-id="{{ asset.pk }}">
-            Add to Basket — {{ asset.coin_price }} RC
-          </button>
-        {% endif %}
-
-        {% if user.is_authenticated %}
-          <button class="btn btn-outline-secondary rounded-pill px-3 btn-bookmark {% if is_bookmarked %}bookmarked{% endif %}"
-                  id="bookmark-btn"
-                  data-asset-type="{{ asset_type }}" data-asset-id="{{ asset.pk }}" type="button">
-            {% if is_bookmarked %}Saved{% else %}Save{% endif %}
-          </button>
-
-          <button class="btn btn-outline-secondary rounded-pill px-3"
-                  data-bs-toggle="modal" data-bs-target="#collectionModal" type="button">
-            Add to Collection
-          </button>
-
-          {% if user != asset.user %}
-            <button class="btn btn-follow {% if is_following_creator %}following{% else %}btn-outline-primary{% endif %} rounded-pill px-3"
-                    id="follow-creator-btn" data-username="{{ asset.user.username }}" type="button">
-              {% if is_following_creator %}Following{% else %}Follow Creator{% endif %}
+  <div class="asset-view-layout">
+    <section class="asset-view-stage" aria-label="{{ asset_type|title }} preview and rating">
+      <div class="asset-view-media-shell">
+        <div class="asset-detail-media asset-view-media {% if asset_type == 'video' %}is-video{% else %}is-image{% endif %}">
+          {% if asset_type == 'video' %}
+            {% if asset.playback_url %}
+              <video id="detailVideo" src="{{ asset.playback_url }}" controls loop playsinline preload="metadata"
+                     {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
+                     aria-label="Play {{ asset.display_title }}"></video>
+              <button type="button" id="detailVideoPlay" class="asset-view-play" aria-label="Play {{ asset.display_title }}">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5a1 1 0 0 1 1.53-.85l9.5 6.5a1 1 0 0 1 0 1.7l-9.5 6.5A1 1 0 0 1 8 18.5z"/></svg>
+                <span>Play reel</span>
+              </button>
+            {% elif asset.source_media_url %}
+              <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" fetchpriority="high">
+              <span class="asset-view-unavailable">Preview unavailable</span>
+            {% endif %}
+          {% else %}
+            <img id="detailImage" src="{{ asset.media_url }}" alt="{{ asset.display_title }}" fetchpriority="high">
+            <button type="button" id="openImageViewer" class="asset-view-expand" aria-label="View image full size">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>
+              View full size
             </button>
           {% endif %}
+        </div>
+        <div class="asset-view-media-foot">
+          <span>{% if asset_type == 'video' %}Product reel{% else %}Generated image{% endif %}</span>
+          {% if asset_type == 'video' %}
+            {% if asset.duration %}<span>{{ asset.duration }} second{{ asset.duration|pluralize }} · {{ asset.video_style|default:"Cinematic" }}</span>{% endif %}
+          {% elif asset.aspect_ratio %}
+            <span>{{ asset.aspect_ratio }} aspect ratio</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="asset-view-rating">
+        <div class="asset-view-rating-summary">
+          <div class="star-display" id="avgStars" aria-label="Average rating: {{ avg_rating }} out of 5">
+            {% for i in "12345" %}
+              <span class="star-icon {% if avg_rating >= forloop.counter %}filled{% endif %}" aria-hidden="true">&#9733;</span>
+            {% endfor %}
+          </div>
+          <span><strong id="avgVal">{{ avg_rating }}</strong> / 5 <span class="asset-view-rating-count">· <span id="ratingCount">{{ rating_count }}</span> rating{{ rating_count|pluralize }}</span></span>
+        </div>
+        {% if user.is_authenticated %}
+          <div class="asset-view-rating-input">
+            <span>Your rating</span>
+            <div class="star-input" id="starInput" role="group" aria-label="Rate this {{ asset_type }}" data-asset-type="{{ asset_type }}" data-asset-id="{{ asset.pk }}">
+              {% for i in "12345" %}
+                <button class="star-btn {% if user_rating and user_rating >= forloop.counter %}active{% endif %}"
+                        data-val="{{ forloop.counter }}" type="button" aria-label="{{ forloop.counter }} star{{ forloop.counter|pluralize }}"
+                        aria-pressed="{% if user_rating == forloop.counter %}true{% else %}false{% endif %}">&#9733;</button>
+              {% endfor %}
+            </div>
+            <span id="yourRatingLabel">{% if user_rating %}You rated {{ user_rating }}★{% else %}Not rated yet{% endif %}</span>
+          </div>
+        {% else %}
+          <p class="asset-view-rate-login"><a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a> to rate this {{ asset_type }}.</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <article class="asset-view-info">
+      <div class="asset-view-tags">
+        <span>{{ asset_type|title }}</span>
+        {% if asset_type == 'video' %}
+          {% if asset.category %}<span>{{ asset.category }}</span>{% endif %}
+        {% else %}
+          {% if asset.style %}<span>{{ asset.style }}</span>{% endif %}
+        {% endif %}
+      </div>
+      <h1>{{ asset.display_title }}</h1>
+      <div class="asset-view-facts">
+        <span>Published {{ asset.created_at|date:"F j, Y" }}</span>
+        <span>{{ asset.view_count }} view{{ asset.view_count|pluralize }}</span>
+      </div>
+
+      <a href="{% url 'creator_profile' asset.user.username %}" class="asset-view-creator creator-hover-card">
+        <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
+             width="44" height="44" alt="">
+        <span class="asset-view-creator-name">
+          <strong>{{ asset.user.get_full_name|default:asset.user.username }}</strong>
+          <small>@{{ asset.user.username }}{% if profile.bio %} · {{ profile.bio|truncatechars:50 }}{% endif %}</small>
+        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+      </a>
+
+      {% if asset_type == 'image' and asset.prompt %}
+        <div class="asset-view-prompt">
+          <span>Prompt</span>
+          <p>{{ asset.prompt }}</p>
+        </div>
+      {% elif asset_type == 'video' %}
+        <div class="asset-view-specs">
+          {% if asset.category %}<div><span>Category</span><strong>{{ asset.category }}</strong></div>{% endif %}
+          {% if asset.duration %}<div><span>Duration</span><strong>{{ asset.duration }} seconds</strong></div>{% endif %}
+          {% if asset.caption_style %}<div><span>Captions</span><strong>{{ asset.caption_style|title }}</strong></div>{% endif %}
+        </div>
+      {% endif %}
+
+      <div class="asset-view-purchase">
+        <div class="asset-price-box">
+          <div>
+            <div class="asset-price-label">Download price</div>
+            <div class="asset-price-value"><span>{{ asset.coin_price }}</span><small>RC</small></div>
+          </div>
+          {% if user.is_authenticated %}
+            <span class="asset-view-balance">Your balance <strong>{{ wallet_balance }} RC</strong></span>
+          {% endif %}
+        </div>
+
+        <div class="asset-view-purchase-actions">
+          {% if user.is_authenticated and user.id == asset.user_id %}
+            {% if asset_type == 'video' and asset.playback_url %}
+              <a href="{{ asset.playback_url }}" download target="_blank" rel="noopener" class="asset-view-primary-action">Download your reel</a>
+            {% elif asset_type == 'image' %}
+              <a href="{{ asset.media_url }}" download class="asset-view-primary-action">Download your image</a>
+            {% endif %}
+          {% elif asset_type == 'image' and asset.pk in basket_image_ids %}
+            <button class="btn-basket btn-basket-large is-in-basket" disabled>Already in Basket</button>
+            <a href="{% url 'basket_page' %}" class="asset-view-secondary-action">View Basket</a>
+          {% elif asset_type == 'video' and asset.pk in basket_video_ids %}
+            <button class="btn-basket btn-basket-large is-in-basket" disabled>Already in Basket</button>
+            <a href="{% url 'basket_page' %}" class="asset-view-secondary-action">View Basket</a>
+          {% else %}
+            <button type="button" class="btn-basket btn-basket-large" data-asset-type="{{ asset_type }}" data-asset-id="{{ asset.pk }}">
+              Add to Basket <span aria-hidden="true">→</span>
+            </button>
+          {% endif %}
+        </div>
+
+        {% if user.is_authenticated %}
+          <div class="asset-view-save-actions">
+            <button class="btn-bookmark {% if is_bookmarked %}bookmarked{% endif %}" id="bookmark-btn"
+                    data-asset-type="{{ asset_type }}" data-asset-id="{{ asset.pk }}" type="button"
+                    aria-pressed="{% if is_bookmarked %}true{% else %}false{% endif %}">
+              {% if is_bookmarked %}Saved{% else %}Save{% endif %}
+            </button>
+            <button data-bs-toggle="modal" data-bs-target="#collectionModal" type="button">Add to Collection</button>
+            {% if user != asset.user %}
+              <button class="btn-follow {% if is_following_creator %}following{% endif %}" id="follow-creator-btn"
+                      data-username="{{ asset.user.username }}" type="button">
+                {% if is_following_creator %}Following{% else %}Follow Creator{% endif %}
+              </button>
+            {% endif %}
+          </div>
         {% endif %}
       </div>
 
-      <div class="share-panel mt-4">
-        <div class="share-panel-title">Share this {{ asset_type }}</div>
-        <div class="d-flex gap-2 mb-3 flex-wrap">
-          <button class="btn btn-outline-secondary rounded-pill px-3" id="copyLinkBtn" type="button" data-url="{{ public_url }}" style="font-size:.78rem;">
-            Copy Link
-          </button>
+      <div class="share-panel asset-view-share">
+        <div class="asset-view-share-heading">
+          <div class="share-panel-title">Share this {{ asset_type }}</div>
+          <button id="copyLinkBtn" type="button" data-url="{{ public_url }}">Copy link</button>
         </div>
         <div class="share-btn-grid" id="assetShareGrid"></div>
-        <div class="text-success small mt-2" id="copyLinkFeedback" style="display:none;">Link copied.</div>
+        <div class="asset-view-copy-feedback" id="copyLinkFeedback" role="status" style="display:none;">Link copied.</div>
       </div>
-    </div>
+    </article>
   </div>
+
+  {% if asset_type == 'image' %}
+    <dialog id="assetImageDialog" class="asset-view-dialog" aria-label="{{ asset.display_title }} full size">
+      <button type="button" id="closeImageViewer" class="asset-view-dialog-close" aria-label="Close full size image">Close</button>
+      <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}">
+    </dialog>
+  {% endif %}
 
   {% if user.is_authenticated %}
   <div class="modal fade" id="collectionModal" tabindex="-1" aria-hidden="true">
@@ -197,7 +222,7 @@
   <hr class="my-5">
   <div id="commentsSection">
     <h4 class="fw-bold mb-4">
-      💬 Comments
+      Comments
       <span class="badge bg-secondary rounded-pill ms-2 fs-6" id="commentCountBadge">{{ comments_data|length }}</span>
     </h4>
 
@@ -326,15 +351,15 @@
   <h4 class="fw-bold mb-4">More by {{ asset.user.get_full_name|default:asset.user.username }}</h4>
   <div class="library-grid library-grid-sm">
     {% for other in other_assets %}
-      <a href="{% url 'asset_detail' asset_type other.pk %}" class="lib-card text-decoration-none reveal-up">
+      <a href="{% url 'asset_detail' asset_type other.pk %}" class="lib-card text-decoration-none">
         <div class="lib-card-media">
           {% if asset_type == 'image' %}
             <img src="{{ other.media_url }}" alt="{{ other.display_title }}" loading="lazy">
           {% else %}
             {% if other.playback_url %}
-              <video src="{{ other.playback_url }}" muted loop playsinline preload="metadata"
+              <video src="{{ other.playback_url }}" muted loop playsinline preload="none"
                      {% if other.source_media_url %}poster="{{ other.source_media_url }}"{% endif %}
-                     onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+                     aria-label="Preview of {{ other.display_title }}"></video>
             {% elif other.source_media_url %}
               <img src="{{ other.source_media_url }}" alt="{{ other.display_title }}" loading="lazy">
             {% endif %}
@@ -394,6 +419,33 @@ const IS_AUTH = {{ user.is_authenticated|yesno:"true,false" }};
 const IS_CREATOR = {{ is_creator|yesno:"true,false" }};
 const CUR_USER = '{{ user.username|escapejs }}';
 const EMOJI_CHOICES = [{% for em in emoji_choices %}'{{ em|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+
+const imageDialog = document.getElementById('assetImageDialog');
+document.getElementById('openImageViewer')?.addEventListener('click', () => imageDialog?.showModal());
+document.getElementById('closeImageViewer')?.addEventListener('click', () => imageDialog?.close());
+imageDialog?.addEventListener('click', event => { if (event.target === imageDialog) imageDialog.close(); });
+
+const detailVideo = document.getElementById('detailVideo');
+const detailVideoPlay = document.getElementById('detailVideoPlay');
+if (detailVideo && detailVideoPlay) {
+  detailVideoPlay.addEventListener('click', () => detailVideo.play().catch(() => {}));
+  detailVideo.addEventListener('play', () => detailVideoPlay.classList.add('is-hidden'));
+  detailVideo.addEventListener('pause', () => detailVideoPlay.classList.remove('is-hidden'));
+  document.addEventListener('visibilitychange', () => { if (document.hidden) detailVideo.pause(); });
+}
+
+const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+document.querySelectorAll('.asset-view-page .lib-card video').forEach(video => {
+  const card = video.closest('.lib-card');
+  card.addEventListener('mouseenter', () => {
+    if (!motionPreference.matches && !document.hidden) video.play().catch(() => {});
+  });
+  card.addEventListener('mouseleave', () => {
+    video.pause();
+    if (video.readyState) video.currentTime = 0;
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) video.pause(); });
+});
 
 const collectionModal = document.getElementById('collectionModal');
 if (collectionModal && collectionModal.parentElement !== document.body) {
@@ -463,13 +515,14 @@ if (starInput) {
       const score = Number(button.dataset.val);
       postJson('{% url "rate_asset" %}', {asset_type: ASSET_TYPE, asset_id: ASSET_ID, score}).then(data => {
         buttons.forEach(b => b.classList.toggle('active', Number(b.dataset.val) <= score));
+        buttons.forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.val) === score)));
         document.getElementById('yourRatingLabel').textContent = 'You rated ' + score + '★';
         document.getElementById('avgVal').textContent = data.avg;
         document.getElementById('ratingCount').textContent = data.count;
         document.getElementById('avgStars').querySelectorAll('.star-icon').forEach((star, index) => {
           star.classList.toggle('filled', data.avg >= index + 1);
         });
-      });
+      }).catch(error => window.RSToast?.show(error.message || 'Rating could not be saved.', 'error'));
     });
   });
 }
@@ -666,12 +719,13 @@ if (bookmarkBtn) {
   bookmarkBtn.addEventListener('click', function() {
     postJson('{% url "toggle_bookmark" %}', {asset_type: ASSET_TYPE, asset_id: ASSET_ID}).then(data => {
       if (data.bookmarked) {
-        bookmarkBtn.textContent = 'Saved';;
+        bookmarkBtn.textContent = 'Saved';
         bookmarkBtn.classList.add('bookmarked');
       } else {
-        bookmarkBtn.textContent = 'Save';;
+        bookmarkBtn.textContent = 'Save';
         bookmarkBtn.classList.remove('bookmarked');
       }
+      bookmarkBtn.setAttribute('aria-pressed', String(data.bookmarked));
     }).catch(error => alert(error.message));
   });
 }

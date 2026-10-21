@@ -45,6 +45,8 @@ def create(request):
 @login_required
 def my_assets(request):
     tab    = request.GET.get("tab", "all")
+    if tab not in {"all", "images", "videos"}:
+        tab = "all"
     images = GeneratedImage.objects.filter(user=request.user, is_saved=True)
     videos = GeneratedVideo.objects.filter(user=request.user, is_saved=True, status="done")
     return render(request, "studio/my_assets.html", {

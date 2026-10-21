@@ -1,0 +1,68 @@
+<article class="studio-asset-card">
+  <div class="studio-asset-media {% if asset_type == 'video' %}is-reel{% endif %}">
+    {% if asset_type == 'image' %}
+      <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+    {% elif asset.playback_url %}
+      <video class="studio-card-video" src="{{ asset.playback_url }}" muted loop playsinline preload="none"
+             {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
+             aria-label="{{ asset.display_title }}"></video>
+    {% elif asset.source_media_url %}
+      <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+    {% endif %}
+    <span class="studio-media-kind">{% if asset_type == 'video' %}Reel{% else %}Image{% endif %}</span>
+    <span class="studio-publication-state {% if asset.is_published %}is-published{% else %}is-draft{% endif %}">
+      {% if asset.is_published %}Published{% else %}Draft{% endif %}
+    </span>
+    {% if asset_type == 'video' %}<span class="studio-reel-play" aria-hidden="true"></span>{% endif %}
+  </div>
+
+  <div class="studio-asset-content">
+    <h3 class="studio-asset-title">{{ asset.display_title }}</h3>
+    <div class="studio-asset-specs">
+      {% if asset_type == 'image' %}
+        {% if asset.style %}<span>{{ asset.style }}</span>{% endif %}
+        {% if asset.aspect_ratio %}<span>{{ asset.aspect_ratio }}</span>{% endif %}
+      {% else %}
+        {% if asset.category %}<span>{{ asset.category }}</span>{% endif %}
+        {% if asset.duration %}<span>{{ asset.duration }}s</span>{% endif %}
+        <span>{{ asset.caption_style|default:"auto" }} captions</span>
+      {% endif %}
+    </div>
+    <div class="studio-asset-facts">
+      <time datetime="{{ asset.created_at|date:'Y-m-d' }}">{{ asset.created_at|date:"M d, Y" }}</time>
+      <span>{{ asset.view_count }} view{{ asset.view_count|pluralize }}</span>
+    </div>
+
+    <div class="studio-asset-actions">
+      <div class="studio-asset-primary-actions">
+        {% if asset.is_published %}
+          {% url 'asset_detail' asset_type asset.pk as detail_url %}
+          <a href="{{ detail_url }}" class="studio-action studio-action-primary">View in Library</a>
+        {% else %}
+          <button type="button" class="studio-action studio-action-primary publication-toggle"
+                  data-url="{% url 'set_asset_publication' asset_type asset.pk %}"
+                  data-publish="true">Publish</button>
+        {% endif %}
+
+        {% if asset_type == 'image' %}
+          <a href="{{ asset.media_url }}" download class="studio-action studio-action-secondary">Download</a>
+        {% elif asset.playback_url %}
+          <a href="{{ asset.playback_url }}" download target="_blank" rel="noopener"
+             class="studio-action studio-action-secondary">Download</a>
+        {% endif %}
+      </div>
+
+      {% if asset.is_published %}
+        <div class="studio-asset-secondary-actions">
+          <button type="button" class="studio-text-action copy-asset-link"
+                  data-url="{{ request.scheme }}://{{ request.get_host }}{{ detail_url }}">Copy link</button>
+          <a href="https://www.facebook.com/sharer/sharer.php?u={% filter urlencode %}{{ request.scheme }}://{{ request.get_host }}{{ detail_url }}{% endfilter %}"
+             target="_blank" rel="noopener noreferrer" class="studio-text-action">Share on Facebook</a>
+          <button type="button" class="studio-text-action studio-unpublish publication-toggle"
+                  data-url="{% url 'set_asset_publication' asset_type asset.pk %}"
+                  data-publish="false">Unpublish</button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</article>

@@ -1,150 +1,172 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}ReelStock — AI Product Media Platform{% endblock %}
+{% block extra_head %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+{% endblock %}
 
 {% block content %}
-<!-- Hero -->
-<section class="hero-section text-center reveal-up">
-  <div class="hero-eyebrow">AI-Powered Product Media</div>
-  <h1 class="hero-headline">Generate. Create. <span class="gradient-text">Publish.</span></h1>
-  <p class="hero-sub">Turn product photos into polished commercial reels. Generate studio-quality images with a single prompt.</p>
-  <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
-    <a href="{% url 'create' %}" class="btn btn-primary btn-lg rounded-pill px-5 shadow">Make a Reel</a>
-    <a href="{% url 'prompt_to_image' %}" class="btn btn-outline-primary btn-lg rounded-pill px-5">Generate Image</a>
-  </div>
-</section>
-
-<div class="container" style="max-width:1200px;">
-  <hr class="my-5 opacity-25">
-
-  <!-- How it works -->
-  <section class="mb-5 reveal-up">
-    <h2 class="fw-bold mb-4 text-center">How it works</h2>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="how-card">
-          <div class="how-icon">📷</div>
-          <h5 class="fw-bold">1. Upload or Prompt</h5>
-          <p class="text-muted mb-0">Upload a product photo for reels, or type a prompt to generate any image from scratch.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="how-card">
-          <div class="how-icon">✨</div>
-          <h5 class="fw-bold">2. AI Creates</h5>
-          <p class="text-muted mb-0">Our AI pipeline generates professional-grade images and product reels using cinematic prompts.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="how-card">
-          <div class="how-icon">🚀</div>
-          <h5 class="fw-bold">3. Download & Publish</h5>
-          <p class="text-muted mb-0">Download your assets, publish them to the community library, and grow your creator profile.</p>
-        </div>
+<div class="landing-page">
+  <section class="landing-hero" aria-labelledby="landing-title">
+    <div class="landing-hero-copy">
+      <h1 id="landing-title" class="landing-title">Generate.<br><em>Create.</em><br>Publish.</h1>
+      <p class="landing-sub">Turn product photos into polished commercial reels. Generate studio-quality images with a single prompt.</p>
+      <div class="landing-actions">
+        <a href="{% url 'create' %}" class="btn btn-primary landing-button">Make a Reel</a>
+        <a href="{% url 'prompt_to_image' %}" class="btn btn-outline-primary landing-button landing-button-secondary">Generate Image</a>
       </div>
     </div>
-  </section>
 
-  <!-- Featured Picks -->
-  <section class="mb-5 reveal-up">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h2 class="fw-bold mb-1">Featured Picks</h2>
-        <p class="text-muted mb-0">Handpicked by the ReelStock team.</p>
-      </div>
-      <a href="{% url 'library' %}" class="btn btn-outline-secondary rounded-pill px-4">View Library →</a>
-    </div>
-
-    {% if featured %}
-      <div class="library-grid library-grid-sm">
-        {% for item in featured %}
+    <div class="landing-preview" aria-label="Featured work from ReelStock creators">
+      <div class="landing-preview-top"><span class="landing-preview-dot"></span><span>ReelStock / Creator showcase</span></div>
+      {% if featured %}
+        {% for item in featured|slice:':1' %}
           {% with asset=item.get_asset %}
             {% if asset %}
-              <a href="{% url 'asset_detail' item.asset_type asset.pk %}" class="lib-card text-decoration-none reveal-up">
-                <div class="lib-card-media {% if item.asset_type == 'video' %}lib-card-video{% endif %}">
-                  {% if item.asset_type == 'image' %}
-                    <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" loading="lazy">
-                  {% else %}
-                    {% if asset.playback_url %}
-                      <video src="{{ asset.playback_url }}" muted loop playsinline preload="metadata"
-                             {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
-                             onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
-                    {% elif asset.source_media_url %}
-                      <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" loading="lazy">
-                    {% endif %}
-                    <div class="lib-play-icon">▶</div>
-                  {% endif %}
-                </div>
-                <div class="lib-card-info">
-                  <div class="lib-card-title">{{ asset.display_title }}</div>
-                  <div class="lib-card-meta">
-                    <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}" class="lib-avatar" alt="">
-                    <span>{{ asset.user.get_full_name|default:asset.user.username }}</span>
-                    <span class="asset-views-chip ms-auto">👁 {{ asset.view_count }}</span>
-                  </div>
-                </div>
+              <a class="landing-preview-media" href="{% url 'asset_detail' item.asset_type asset.pk %}" aria-label="View featured work: {{ asset.display_title }}">
+                {% if item.asset_type == 'image' %}
+                  <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" fetchpriority="high">
+                {% elif asset.source_media_url %}
+                  <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" fetchpriority="high">
+                {% elif asset.playback_url %}
+                  <video src="{{ asset.playback_url }}" muted playsinline preload="metadata" aria-label="{{ asset.display_title }}"></video>
+                {% endif %}
+                <span class="landing-preview-overlay"><span class="landing-preview-label">Featured work</span><strong>{{ asset.display_title }}</strong></span>
               </a>
             {% endif %}
           {% endwith %}
         {% endfor %}
-      </div>
-    {% else %}
-      <div class="text-center py-4 rounded-4 border bg-white">
-        <p class="text-muted mb-3">No featured picks yet. Publish some creations and the admin will feature them here.</p>
-        <a href="{% url 'prompt_to_image' %}" class="btn btn-primary rounded-pill px-4">Create Something</a>
-      </div>
-    {% endif %}
+      {% else %}
+        <div class="landing-preview-empty">
+          <span class="landing-preview-monogram" aria-hidden="true">R<span>.</span></span>
+          <span>Start with a prompt.<br>Make something worth sharing.</span>
+        </div>
+      {% endif %}
+      <div class="landing-preview-bottom"><span>Imagine it. Make it. Share it.</span></div>
+    </div>
   </section>
 
-  <!-- Blog / From the blog -->
-  <section class="mb-5 reveal-up">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h2 class="fw-bold mb-1">From the Blog</h2>
-        <p class="text-muted mb-0">Tips, updates, and creator workflows.</p>
+  <div class="landing-shell">
+    <section class="landing-section landing-process" aria-labelledby="process-title">
+      <div class="landing-section-heading">
+        <h2 id="process-title">How it works</h2>
       </div>
-      <a href="{% url 'blog_list' %}" class="btn btn-outline-secondary rounded-pill px-4">View all posts →</a>
-    </div>
+      <div class="landing-process-grid">
+        <div class="landing-step">
+          <span class="landing-step-number">01</span>
+          <h3>Upload or Prompt</h3>
+          <p>Upload a product photo for reels, or type a prompt to generate any image from scratch.</p>
+        </div>
+        <div class="landing-step">
+          <span class="landing-step-number">02</span>
+          <h3>AI Creates</h3>
+          <p>Our AI pipeline generates professional-grade images and product reels using cinematic prompts.</p>
+        </div>
+        <div class="landing-step">
+          <span class="landing-step-number">03</span>
+          <h3>Download &amp; Publish</h3>
+          <p>Download your assets, publish them to the community library, and grow your creator profile.</p>
+        </div>
+      </div>
+    </section>
 
-    {% if blog_posts %}
-      <div class="row g-4">
-        {% for post in blog_posts %}
-          <div class="col-md-4 reveal-up">
-            <a href="{% url 'blog_detail' post.slug %}" class="text-decoration-none">
-              <div class="blog-card h-100">
+    <section class="landing-section" aria-labelledby="featured-title">
+      <div class="landing-section-heading landing-section-heading-split">
+        <div>
+          <h2 id="featured-title">Featured <em>Picks</em></h2>
+          <p>Handpicked by the ReelStock team.</p>
+        </div>
+        <a href="{% url 'library' %}" class="landing-text-link">View Library <span class="landing-arrow" aria-hidden="true"></span></a>
+      </div>
+      {% if featured %}
+        <div class="library-grid library-grid-sm landing-featured-grid">
+          {% for item in featured %}
+            {% with asset=item.get_asset %}
+              {% if asset %}
+                <a href="{% url 'asset_detail' item.asset_type asset.pk %}" class="lib-card landing-featured-card text-decoration-none">
+                  <div class="lib-card-media {% if item.asset_type == 'video' %}lib-card-video{% endif %}">
+                    {% if item.asset_type == 'image' %}
+                      <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+                    {% else %}
+                      {% if asset.playback_url %}
+                        <video src="{{ asset.playback_url }}" muted loop playsinline preload="metadata"
+                               {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
+                               onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+                      {% elif asset.source_media_url %}
+                        <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+                      {% endif %}
+                      <span class="landing-video-badge">Video</span>
+                    {% endif %}
+                  </div>
+                  <div class="lib-card-info">
+                    <div class="lib-card-title">{{ asset.display_title }}</div>
+                    <div class="lib-card-meta">
+                      <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}" class="lib-avatar" alt="">
+                      <span>{{ asset.user.get_full_name|default:asset.user.username }}</span>
+                      <span class="asset-views-chip ms-auto">{{ asset.view_count }} views</span>
+                    </div>
+                  </div>
+                </a>
+              {% endif %}
+            {% endwith %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="landing-empty">
+          <p>No featured picks yet. Publish some creations and the admin will feature them here.</p>
+          <a href="{% url 'prompt_to_image' %}" class="btn btn-primary landing-button">Create Something</a>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="landing-section" aria-labelledby="blog-title">
+      <div class="landing-section-heading landing-section-heading-split">
+        <div>
+          <h2 id="blog-title">From the <em>Blog</em></h2>
+          <p>Tips, updates, and creator workflows.</p>
+        </div>
+        <a href="{% url 'blog_list' %}" class="landing-text-link">View all posts <span class="landing-arrow" aria-hidden="true"></span></a>
+      </div>
+      {% if blog_posts %}
+        <div class="landing-blog-grid">
+          {% for post in blog_posts %}
+            <a href="{% url 'blog_detail' post.slug %}" class="landing-blog-link text-decoration-none">
+              <article class="blog-card">
                 <div class="blog-card-cat">{{ post.category }}</div>
-                <h5 class="blog-card-title">{{ post.title }}</h5>
+                <h3 class="blog-card-title">{{ post.title }}</h3>
                 <p class="blog-card-excerpt">{{ post.excerpt|default:post.body|truncatechars:120 }}</p>
                 <div class="blog-card-footer">
                   <span>{{ post.author.get_full_name|default:post.author.username|default:"Team" }}</span>
                   <span>{{ post.created_at|date:"M d, Y" }}</span>
                 </div>
-                <span class="blog-card-read">Read more →</span>
-              </div>
+                <span class="blog-card-read">Read more <span class="landing-arrow" aria-hidden="true"></span></span>
+              </article>
             </a>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="text-center py-4 rounded-4 border bg-white">
-        <p class="text-muted">No blog posts yet. Superusers can add posts from the Django Admin.</p>
-      </div>
-    {% endif %}
-  </section>
-
-  <!-- CTA -->
-  <section class="cta-section text-center mb-5 reveal-up">
-    <h2 class="fw-bold mb-2">Ready to create?</h2>
-    <p class="text-muted mb-4">Join the ReelStock community and start publishing AI-generated product media.</p>
-    <div class="d-flex justify-content-center gap-3 flex-wrap">
-      {% if user.is_authenticated %}
-        <a href="{% url 'create' %}" class="btn btn-primary btn-lg rounded-pill px-5">Create a Reel</a>
-        <a href="{% url 'library' %}" class="btn btn-outline-primary btn-lg rounded-pill px-5">Browse Library</a>
+          {% endfor %}
+        </div>
       {% else %}
-        <button class="btn btn-primary btn-lg rounded-pill px-5" data-bs-toggle="modal" data-bs-target="#registerModal">Join Free</button>
-        <a href="{% url 'library' %}" class="btn btn-outline-primary btn-lg rounded-pill px-5">Browse Library</a>
+        <div class="landing-empty"><p>No blog posts yet. Superusers can add posts from the Django Admin.</p></div>
       {% endif %}
-    </div>
-  </section>
+    </section>
+
+    <section class="landing-cta" aria-labelledby="landing-cta-title">
+      <div>
+        <h2 id="landing-cta-title">Ready to <em>create?</em></h2>
+        <p>Join the ReelStock community and start publishing AI-generated product media.</p>
+      </div>
+      <div class="landing-cta-actions">
+        {% if user.is_authenticated %}
+          <a href="{% url 'create' %}" class="btn landing-cta-primary">Create a Reel</a>
+          <a href="{% url 'library' %}" class="btn landing-cta-secondary">Browse Library</a>
+        {% else %}
+          <button class="btn landing-cta-primary" data-bs-toggle="modal" data-bs-target="#registerModal">Join Free</button>
+          <a href="{% url 'library' %}" class="btn landing-cta-secondary">Browse Library</a>
+        {% endif %}
+      </div>
+    </section>
+  </div>
 </div>
 {% endblock %}

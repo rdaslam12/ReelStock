@@ -57,3 +57,4 @@ dist/
 *.swp
 *~
 RunEnv.txt
+.impeccable/

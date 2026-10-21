@@ -1,107 +1,76 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Generate – ReelStock{% endblock %}
+{% block extra_head %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/generate-page.css' %}">{% endblock %}
 
 {% block content %}
 <div class="reel-maker-wrapper prompt-to-image-page">
-  <div class="header-section">
-    <h1 class="page-title">Generate with AI</h1>
-    <p class="text-muted">Create photorealistic images from your description.</p>
-  </div>
-
-  <div class="reel-maker-layout">
-    <!-- LEFT -->
-    <div class="controls-column">
-
-      <div class="glass-card">
-        <div class="card-header-flex">
-          <h3>1. YOUR PROMPT</h3>
-        </div>
-        <label class="small-label mb-2">Detailed Description</label>
-        <textarea id="promptInput" class="form-control glass-input" rows="5"
-          placeholder="e.g. A luxury watch on a marble surface, cinematic lighting, 8K…"></textarea>
-        <div class="style-tags-container mt-3">
-          <span class="tag-badge" data-tag="8K Resolution">8K</span>
-          <span class="tag-badge" data-tag="Photorealistic">Photorealistic</span>
-          <span class="tag-badge" data-tag="Cinematic Lighting">Cinematic</span>
-          <span class="tag-badge" data-tag="Cyberpunk style">Cyberpunk</span>
-          <span class="tag-badge" data-tag="Minimalist">Minimalist</span>
-          <span class="tag-badge" data-tag="Studio lighting">Studio</span>
-        </div>
-      </div>
-
-      <!-- Image settings -->
-      <div class="glass-card" id="imageSettings">
-        <div class="card-header-flex">
-          <h3>2. IMAGE SETTINGS</h3><span class="icon-small">⚙</span>
-        </div>
-        <div class="row">
-          <div class="col-6 mb-3">
-            <label class="small-label">Style</label>
-            <select id="imageStyle" class="form-select glass-select">
-              <option>Realistic</option><option>Anime</option>
-              <option>Oil Painting</option><option>Digital Art</option>
-            </select>
-          </div>
-          <div class="col-6 mb-3">
-            <label class="small-label">Aspect Ratio</label>
-            <select id="aspectRatio" class="form-select glass-select">
-              <option value="1:1">1:1 Square</option>
-              <option value="16:9">16:9 Cinematic</option>
-              <option value="9:16">9:16 Portrait</option>
-            </select>
-          </div>
-        </div>
-        <button type="button" id="generateImageBtn" class="btn-generate-premium w-100">Generate Photo</button>
-      </div>
-
+  <header class="generate-heading">
+    <div>
+      <h1>Turn a thought into an image</h1>
+      <p>Describe what you imagine, choose a look, and create a new visual in seconds.</p>
     </div>
+    <div class="generate-heading-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M32 5v54M5 32h54M13 13l38 38M51 13 13 51" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="32" cy="32" r="8" fill="currentColor"/></svg></div>
+  </header>
 
-    <!-- RIGHT: Preview -->
-    <div class="preview-column">
-      <div class="glass-card preview-card-premium">
-        <div class="card-header-flex">
-          <h3>RESULT</h3><span class="info-icon">ⓘ</span>
-        </div>
-
-        <div class="gen-canvas" id="gen-canvas">
-          <div id="gen-placeholder" class="gen-placeholder">
-            <span class="gen-placeholder-icon" id="placeholderIcon">🖼</span>
-            <p id="placeholderText">Your generated photo<br>will appear here</p>
-          </div>
-          <div class="loader-overlay" id="loader-overlay" style="display:none;">
-            <div class="skeleton-pulse"></div>
-            <p class="loader-text">AI is creating…</p>
-          </div>
-          <img id="result-img" src="" alt="Generated" class="generated-preview-media">
-        </div>
-
-        <div id="status-msg" class="small text-center mt-2" style="min-height:1.4em;color:#888;"></div>
-
-        <div id="gen-actions" style="display:none;" class="mt-3 d-flex gap-2 justify-content-center flex-wrap">
-          <a id="downloadBtn" href="#" download class="btn btn-outline-secondary rounded-pill px-4">Download</a>
-          {% if user.is_authenticated %}
-            <button id="publishBtn" class="btn btn-primary rounded-pill px-4">Publish</button>
-          {% else %}
-            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#loginModal">Log in to Publish</button>
-          {% endif %}
-        </div>
-        <div id="publish-confirm" class="text-center text-success small mt-2" style="display:none;">
-          Published to Library!
-        </div>
-        <div id="image-share-actions" class="share-panel mt-3" style="display:none;">
-          <div class="share-panel-title">Share your image</div>
-          <div class="d-flex gap-2 mb-3 flex-wrap">
-            <a id="viewImageDetailBtn" href="#" class="btn btn-outline-primary rounded-pill px-3" style="font-size:.78rem;">View Page</a>
-            <button id="copyImageLinkBtn" type="button" class="btn btn-outline-secondary rounded-pill px-3" style="font-size:.78rem;">Copy Link</button>
-          </div>
-          <div class="share-btn-grid" id="imageShareGrid"></div>
-          <div class="mt-3">
-            <input type="hidden" id="image-share-url-input">
-          </div>
-        </div>
+  <div class="generate-workspace reel-maker-layout">
+    <section class="generate-controls controls-column" aria-label="Image controls">
+      <div class="generate-section-head">
+        <span class="generate-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m4 17 11-11 3 3L7 20H4v-3ZM13 8l3 3M17 4l3 3M20 14v6M17 17h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <div><h2>Describe your image</h2><p>Details help shape the result.</p></div>
       </div>
-    </div>
+      <label class="generate-label" for="promptInput">Your prompt</label>
+      <div class="generate-prompt-field">
+        <textarea id="promptInput" class="form-control glass-input" rows="6" maxlength="1200" aria-describedby="promptHelp promptCount" placeholder="A luxury watch resting on warm marble, dramatic side lighting, rich shadows, editorial product photography…"></textarea>
+        <span id="promptCount" class="generate-char-count">0 / 1200</span>
+      </div>
+      <div class="generate-prompt-help"><span id="promptHelp">Try a subject, setting, lighting, and mood.</span><button type="button" id="clearPromptBtn" class="generate-text-button">Clear prompt</button></div>
+      <div class="generate-tags-head"><span>Quick details</span><small>Tap to add</small></div>
+      <div class="style-tags-container" aria-label="Add a detail to your prompt">
+        <button type="button" class="tag-badge" data-tag="8K Resolution"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>8K</button>
+        <button type="button" class="tag-badge" data-tag="Photorealistic"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.7"/></svg>Photorealistic</button>
+        <button type="button" class="tag-badge" data-tag="Cinematic Lighting"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18v12H3zM3 9h18M8 6l3 3M15 6l3 3" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Cinematic</button>
+        <button type="button" class="tag-badge" data-tag="Cyberpunk style"><svg viewBox="0 0 24 24" fill="none"><path d="m13 2-8 11h6l-1 9 9-12h-6l1-8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Cyberpunk</button>
+        <button type="button" class="tag-badge" data-tag="Minimalist"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 16h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Minimalist</button>
+        <button type="button" class="tag-badge" data-tag="Studio lighting"><svg viewBox="0 0 24 24" fill="none"><path d="m4 5 10-2 3 9-9 3-4-10ZM12 14l2 6M10 20h8M17 7l4-2M18 11h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Studio light</button>
+      </div>
+
+      <div class="generate-divider"></div>
+      <div class="generate-section-head generate-settings-head">
+        <span class="generate-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16M9 4v4M16 10v4M11 16v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <div><h2>Shape the result</h2><p>Set the visual style and frame.</p></div>
+      </div>
+      <div class="generate-settings-grid"><div class="generate-setting-row">
+        <label class="generate-label" for="imageStyle">Visual style</label>
+        <div class="generate-select-wrap"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 2-2c0-.8-.5-1.3-.5-2 0-.8.6-1.5 1.5-1.5H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z" stroke="currentColor" stroke-width="1.7"/><circle cx="7" cy="12" r="1" fill="currentColor"/><circle cx="10" cy="7" r="1" fill="currentColor"/><circle cx="16" cy="8" r="1" fill="currentColor"/></svg><select id="imageStyle" class="form-select glass-select"><option>Realistic</option><option>Anime</option><option>Oil Painting</option><option>Digital Art</option></select></div>
+      </div>
+      <div class="generate-setting-row">
+        <span class="generate-label" id="ratioLabel">Aspect ratio</span>
+        <select id="aspectRatio" class="generate-visually-hidden" tabindex="-1" aria-hidden="true"><option value="1:1">1:1 Square</option><option value="16:9">16:9 Landscape</option><option value="9:16">9:16 Portrait</option></select>
+        <div class="generate-ratio-grid" role="group" aria-labelledby="ratioLabel">
+          <button type="button" class="generate-ratio is-selected" data-ratio="1:1" aria-pressed="true"><span class="generate-ratio-shape ratio-square" aria-hidden="true"></span><span>Square <small>1:1</small></span></button>
+          <button type="button" class="generate-ratio" data-ratio="16:9" aria-pressed="false"><span class="generate-ratio-shape ratio-wide" aria-hidden="true"></span><span>Landscape <small>16:9</small></span></button>
+          <button type="button" class="generate-ratio" data-ratio="9:16" aria-pressed="false"><span class="generate-ratio-shape ratio-tall" aria-hidden="true"></span><span>Portrait <small>9:16</small></span></button>
+        </div>
+      </div></div>
+      <button type="button" id="generateImageBtn" class="generate-submit btn-generate-premium"><span class="generate-submit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2ZM19 17l.7 2.3L22 20l-2.3.7L19 23l-.7-2.3L16 20l2.3-.7L19 17Z" fill="currentColor"/></svg></span><span class="generate-submit-text">Generate image</span><svg class="generate-submit-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </section>
+
+    <section class="generate-preview preview-column" aria-label="Generated image preview">
+      <div class="generate-preview-top"><div><h2>Your canvas</h2><p>See what your words create.</p></div><span class="generate-preview-badge"><span></span> Preview</span></div>
+      <div class="gen-canvas" id="gen-canvas">
+        <div id="gen-placeholder" class="gen-placeholder">
+          <div class="generate-empty-art" aria-hidden="true"><span class="generate-empty-frame"><svg viewBox="0 0 80 80" fill="none"><rect x="11" y="13" width="58" height="54" rx="8" stroke="currentColor" stroke-width="2"/><circle cx="53" cy="28" r="5" stroke="currentColor" stroke-width="2"/><path d="m12 57 17-17 10 10 8-8 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="generate-empty-spark generate-empty-spark-one"></span><span class="generate-empty-spark generate-empty-spark-two"></span></div>
+          <h3>Your next image starts here</h3><p id="placeholderText">Write a prompt and select Generate image<br>to bring your idea to life.</p>
+        </div>
+        <div class="loader-overlay" id="loader-overlay" style="display:none;" role="status"><div class="generate-loader-orbit" aria-hidden="true"><span></span></div><strong>Creating your image</strong><p>Turning your prompt into pixels…</p></div>
+        <div id="generated-media-slot" class="generated-media-slot"></div>
+      </div>
+      <div class="generate-preview-footer"><div id="status-msg" class="generate-status" role="status" aria-live="polite">Your generated image will appear here.</div><button type="button" id="expandPreviewBtn" class="generate-expand" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M4 16v4h4M20 16v4h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>View larger</button></div>
+      <div id="gen-actions" class="generate-actions" hidden><a id="downloadBtn" href="#" download class="generate-action generate-action-secondary"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Download</a>{% if user.is_authenticated %}<button id="publishBtn" type="button" class="generate-action generate-action-primary"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4M4 14v6h16v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Publish to Library</button>{% else %}<button type="button" class="generate-action generate-action-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Log in to publish</button>{% endif %}</div>
+      <div id="publish-confirm" class="generate-published" hidden>Published to Library!</div>
+      <div id="image-share-actions" class="generate-share" hidden><div class="share-panel-title">Share your image</div><div class="generate-share-links"><a id="viewImageDetailBtn" href="#" class="generate-share-link">View image page</a><button id="copyImageLinkBtn" type="button" class="generate-share-link">Copy link</button></div><div class="share-btn-grid" id="imageShareGrid"></div><input type="hidden" id="image-share-url-input"></div>
+    </section>
   </div>
 </div>
 {% endblock %}
@@ -113,14 +82,40 @@ const SAVE_URL     = "{% url 'save_image' %}";
 const CSRF = "{{ csrf_token }}";
 
 let lastImageUrl = null, lastAssetId = null;
+const promptInput = document.getElementById('promptInput');
+const generateButton = document.getElementById('generateImageBtn');
+const generateButtonText = generateButton.querySelector('.generate-submit-text');
+const resultSlot = document.getElementById('generated-media-slot');
+const expandPreviewButton = document.getElementById('expandPreviewBtn');
+
+function updatePromptCount() {
+  document.getElementById('promptCount').textContent = `${promptInput.value.length} / 1200`;
+}
+promptInput.addEventListener('input', updatePromptCount);
+document.getElementById('clearPromptBtn').addEventListener('click', () => {
+  promptInput.value = '';
+  updatePromptCount();
+  promptInput.focus();
+});
+document.querySelectorAll('.generate-ratio').forEach(button => {
+  button.addEventListener('click', () => {
+    document.getElementById('aspectRatio').value = button.dataset.ratio;
+    document.querySelectorAll('.generate-ratio').forEach(option => {
+      const selected = option === button;
+      option.classList.toggle('is-selected', selected);
+      option.setAttribute('aria-pressed', String(selected));
+    });
+  });
+});
 
 function resetResult() {
   document.getElementById('gen-placeholder').style.display='flex';
-  document.getElementById('result-img').style.display='none';
+  resultSlot.replaceChildren();
+  expandPreviewButton.hidden = true;
   document.getElementById('gen-canvas').classList.remove('has-generated-media');
-  document.getElementById('gen-actions').style.display='none';
-  document.getElementById('publish-confirm').style.display='none';
-  document.getElementById('image-share-actions').style.display='none';
+  document.getElementById('gen-actions').hidden=true;
+  document.getElementById('publish-confirm').hidden=true;
+  document.getElementById('image-share-actions').hidden=true;
   document.getElementById('status-msg').textContent='';
   lastImageUrl=null;
   lastAssetId=null;
@@ -128,35 +123,43 @@ function resetResult() {
 
 function setStatus(msg, err=false) {
   const el=document.getElementById('status-msg');
-  el.textContent=msg; el.style.color=err?'#dc3545':'#888';
+  el.textContent=msg;
+  el.classList.toggle('is-error', err);
 }
 
 function showActions() {
-  document.getElementById('gen-actions').style.display='flex';
+  document.getElementById('gen-actions').hidden=false;
 }
 
 document.querySelectorAll('.tag-badge').forEach(t => {
   t.addEventListener('click', function() {
     const inp=document.getElementById('promptInput'), v=this.dataset.tag;
-    if (!inp.value.includes(v)) inp.value += (inp.value?', ':'')+v;
+    if (!inp.value.includes(v) && inp.value.length + v.length + 2 <= 1200) {
+      inp.value += (inp.value?', ':'')+v;
+      updatePromptCount();
+    }
+    inp.focus();
   });
 });
 
 // ── Image generate ─────────────────────────────────────────────────
 document.getElementById('generateImageBtn').addEventListener('click', async function() {
   const prompt=document.getElementById('promptInput').value.trim();
-  if (!prompt) {
-    window.RSToast && RSToast.show('Please enter a prompt first.', 'warning');
-    document.getElementById('promptInput')?.focus();
+  if (prompt.length < 3) {
+    setStatus('Write at least 3 characters to generate an image.', true);
+    window.RSToast && RSToast.show('Write at least 3 characters to generate an image.', 'warning');
+    promptInput.focus();
     return;
   }
-  this.disabled=true; this.textContent='Creating…';
+  this.disabled=true; generateButtonText.textContent='Creating image…';
   document.getElementById('gen-placeholder').style.display='none';
-  document.getElementById('result-img').style.display='none';
+  resultSlot.replaceChildren();
+  expandPreviewButton.hidden = true;
   document.getElementById('gen-canvas').classList.remove('has-generated-media');
   document.getElementById('loader-overlay').style.display='flex';
-  document.getElementById('gen-actions').style.display='none';
-  document.getElementById('publish-confirm').style.display='none';
+  document.getElementById('gen-actions').hidden=true;
+  document.getElementById('publish-confirm').hidden=true;
+  document.getElementById('image-share-actions').hidden=true;
   setStatus('Sending to AI generator…');
   const style=document.getElementById('imageStyle').value;
   const ratio=document.getElementById('aspectRatio').value;
@@ -167,19 +170,26 @@ document.getElementById('generateImageBtn').addEventListener('click', async func
     if (!d.success) throw new Error(d.error||'Failed');
     lastImageUrl=d.image_url;
     lastAssetId=d.asset_id;
-    const img=document.getElementById('result-img');
-    img.onload = () => fitGeneratedPreview(img, document.getElementById('gen-canvas'));
-    img.src=d.image_url; img.style.display='block';
+    const img=document.createElement('img');
+    img.id='result-img';
+    img.className='generated-preview-media';
+    img.alt='Image generated from your prompt';
+    img.addEventListener('load', () => fitGeneratedPreview(img, document.getElementById('gen-canvas')));
+    img.addEventListener('error', () => setStatus('The image could not load. Try generating it again.', true));
+    img.addEventListener('click', () => openFloatingPreview('image', img.currentSrc || img.src));
+    img.src=d.image_url;
+    resultSlot.appendChild(img);
+    expandPreviewButton.hidden = false;
     document.getElementById('downloadBtn').href=d.image_url;
     showActions(); setStatus('Image generated successfully.');
     const pb=document.getElementById('publishBtn');
-    if(pb) { pb.textContent='Publish'; pb.style.display=''; pb.disabled=false; }
+    if(pb) { pb.textContent='Publish to Library'; pb.style.display=''; pb.disabled=false; }
   } catch(e) {
     document.getElementById('gen-placeholder').style.display='flex';
     setStatus(e.message||'Something went wrong.',true);
     window.RSToast && RSToast.show(e.message||'Generation failed. Try again.', 'error');
   } finally {
-    this.textContent='Generate Photo'; this.disabled=false;
+    generateButtonText.textContent='Generate image'; this.disabled=false;
     document.getElementById('loader-overlay').style.display='none';
   }
 });
@@ -200,20 +210,20 @@ if(publishBtn) publishBtn.addEventListener('click', async function() {
       this.style.display='none';
       const confirmEl=document.getElementById('publish-confirm');
       confirmEl.innerHTML = d.detail_url ? `Published to Library! <a href="${d.detail_url}" class="text-success fw-semibold">View image →</a>` : 'Published to Library!';
-      confirmEl.style.display='block';
+      confirmEl.hidden=false;
       window.RSToast && RSToast.show('Image published to Library!', 'success');
       if (d.public_url) {
         document.getElementById('viewImageDetailBtn').href = d.detail_url || '#';
         document.getElementById('copyImageLinkBtn').dataset.url = d.public_url;
         document.getElementById('image-share-url-input').value = d.public_url;
         buildImageShareGrid(d.public_url, lastImageUrl);
-        document.getElementById('image-share-actions').style.display='block';
+        document.getElementById('image-share-actions').hidden=false;
       }
       setStatus('Published to the Library!');
     } else throw new Error(d.error||'Failed');
   } catch(e){
     setStatus(e.message,true);
-    this.disabled=false; this.textContent='Publish';
+    this.disabled=false; this.textContent='Publish to Library';
     window.RSToast && RSToast.show(e.message||'Publish failed.', 'error');
   }
 });
@@ -289,9 +299,7 @@ function closeFloatingPreview() {
   overlay.setAttribute('aria-hidden', 'true');
 }
 
-document.getElementById('result-img').addEventListener('click', function() {
-  openFloatingPreview('image', this.currentSrc || this.src);
-});
+expandPreviewButton.addEventListener('click', () => openFloatingPreview('image', lastImageUrl));
 
 const copyImageLinkBtn = document.getElementById('copyImageLinkBtn');
 if (copyImageLinkBtn) copyImageLinkBtn.addEventListener('click', async function() {

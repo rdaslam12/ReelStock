@@ -412,12 +412,12 @@
   background: #fff;
   border-radius: 18px;
   padding: 1.25rem 1.4rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--rs-border, rgba(0, 0, 0, .08));
+  box-shadow: var(--rs-shadow-card, 0 2px 12px rgba(0, 0, 0, .06));
 }
 .wallet-stat-card-label {
   font-size: 0.72rem;
-  letter-spacing: 1.2px;
+  letter-spacing: .7px;
   text-transform: uppercase;
   color: var(--muted);
   font-weight: 700;
@@ -441,8 +441,8 @@
   background: #fff;
   border-radius: 22px;
   padding: 1.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--rs-border, rgba(0, 0, 0, .08));
+  box-shadow: var(--rs-shadow-card, 0 2px 12px rgba(0, 0, 0, .06));
   margin-bottom: 1.5rem;
 }
 .wallet-section h5 { font-weight: 800; margin-bottom: 1rem; }

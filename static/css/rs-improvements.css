@@ -677,15 +677,15 @@ main.container-fluid { animation: fadeSlideUp .4s ease both; }
 
 /* ── 19. GLASS INPUT REFINEMENTS ─────────────────────────────── */
 .glass-input, .glass-select {
-  background: rgba(255,255,255,.5) !important;
-  border: 1.5px solid rgba(255,255,255,.8) !important;
+  background: rgba(255,255,255,.65) !important;
+  border: 1px solid rgba(91,124,250,.18) !important;
   border-radius: 10px !important;
   font-size: .84rem;
   transition: border-color .2s, box-shadow .2s;
 }
 .glass-input:focus, .glass-select:focus {
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(91,124,250,.12) !important;
+  box-shadow: 0 0 0 3px var(--rs-focus-ring, rgba(91,124,250,.18)) !important;
   background: rgba(255,255,255,.75) !important;
 }
 
@@ -876,11 +876,6 @@ main.container-fluid { animation: fadeSlideUp .4s ease both; }
 #publishBtn:disabled {
   opacity: .6;
   cursor: not-allowed;
-}
-
-/* ── 35. LIBRARY / HOME — card hover with glow ───────────────── */
-.lib-card:hover {
-  box-shadow: 0 16px 40px rgba(15,23,42,.14), 0 0 0 1px rgba(91,124,250,.08);
 }
 
 /* ── 36. GRADIENT SPINNER for loader ─────────────────────────── */

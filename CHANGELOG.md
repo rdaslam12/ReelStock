@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Implemented a full product‑CGI reel generation pipeline that runs entirely locally using Pillow and OpenCV.  The new pipeline removes the background from the uploaded product, generates five scene plates (using HuggingFace FLUX when available or a high‑quality gradient fallback), composites the product with realistic shadows, rim lighting and optional reflections, and assembles a polished MP4 with Ken‑Burns motion and rich transitions.
+- Added a product reel pipeline with local Pillow/OpenCV compositing and video assembly: background removal, five scene compositions, shadows, rim lighting, optional reflections, camera motion, and transitions. Scene backgrounds can use hosted inference or a local gradient fallback. See the [current architecture](docs/ARCHITECTURE.md) for provider boundaries.
 - Added duration selection to the Reel Maker UI. Users can choose an exact length (4 s, 6 s or 8 s), and the backend allocates a fixed frame budget across shots and transitions.
 - Added a Step 3 card to the Reel Maker page for picking the duration and wired up the form submission to include this value.
 - Updated the reel pipeline to accept an optional `duration` parameter and compute per‑frame hold duration dynamically.

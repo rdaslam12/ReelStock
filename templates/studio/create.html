@@ -1,139 +1,123 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Reel Maker – ReelStock{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/reel-maker.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="reel-maker-wrapper">
-  <div class="header-section">
-    <h1 class="page-title">Reel Maker</h1>
-    <p class="text-muted">Upload a product photo. AI removes the background, generates cinematic scenes, adds animated captions, and assembles an exact-length commercial reel.</p>
-  </div>
+  <header class="maker-header">
+    <h1>Reel Maker</h1>
+    <p>Turn a product image into a short commercial reel with scenes and animated captions.</p>
+  </header>
 
   <div class="reel-maker-layout">
-
-    <!-- ── LEFT: Controls ── -->
-    <div class="controls-column">
-
-      <!-- Step 1 -->
-      <div class="glass-card">
-        <div class="card-header-flex">
-          <h3>1. PRODUCT TYPE</h3>
-          
-        </div>
-        <p class="text-muted small mb-3">Sets the scene plan — watch, shoe, bag, or other.</p>
-        <div class="category-grid">
-          <div class="category-item active" data-category="Shoe"><span class="icon">👟</span><p>Shoe</p></div>
-          <div class="category-item" data-category="Watch"><span class="icon">⌚</span><p>Watch</p></div>
-          <div class="category-item" data-category="Bag"><span class="icon">🎒</span><p>Bag</p></div>
-          <div class="category-item" data-category="Other"><span class="icon">📦</span><p>Other</p></div>
-        </div>
-        <input type="hidden" id="selected-category" value="Shoe">
-        <div id="other-input-container" class="mt-3" style="display:none;">
-          <label class="small-label mb-1">Product Name</label>
-          <input type="text" id="other-product-name" class="form-control glass-input" placeholder="e.g. Sunglasses, Perfume…">
-        </div>
-
-        <!-- Scene plan preview -->
-        <div class="scene-plan-box mt-3" id="scene-plan-box"></div>
-      </div>
-
-      <!-- Step 2 -->
-      <div class="glass-card">
-        <div class="card-header-flex">
-          <h3>2. UPLOAD PRODUCT IMAGE</h3>
-          
+    <section class="controls-column" aria-label="Reel controls">
+      <div class="maker-control-surface">
+        <div class="maker-section-heading">
+          <h2>Product image</h2>
+          <span>JPG, PNG or WEBP · up to 15 MB</span>
         </div>
         <div class="upload-zone" id="drop-zone">
           <div class="upload-content" id="upload-content">
-            <span style="font-size:2.2rem;">📷</span>
-            <p><strong>Drag & drop</strong> or click to upload</p>
-            <p class="text-muted small mb-0">JPG, PNG, WEBP — max 15MB</p>
-            <button type="button" class="btn-upload mt-3" id="uploadBtn">+ Choose File</button>
-            <input type="file" id="imageInput" accept="image/*" hidden>
+            <span class="maker-upload-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5"/></svg>
+            </span>
+            <div class="maker-upload-copy"><strong>Drop your image here</strong><span>or select one from your device</span></div>
+            <button type="button" class="btn-upload" id="uploadBtn">Choose image</button>
+            <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" hidden>
           </div>
-          <div id="upload-preview" style="display:none;text-align:center;padding:16px;">
-            <img id="upload-thumb" style="max-height:150px;max-width:100%;border-radius:10px;object-fit:contain;" alt="">
-            <p id="upload-filename" class="text-muted mt-2 mb-1" style="font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;margin:0 auto;"></p>
-            <button type="button" id="changeImgBtn" class="btn btn-xs btn-outline-secondary rounded-pill mt-1">Change image</button>
+          <div id="upload-preview" class="maker-upload-preview" style="display:none;">
+            <span id="upload-filename"></span>
+            <button type="button" id="changeImgBtn">Change image</button>
           </div>
         </div>
-      </div>
 
-      <!-- Step 3 -->
-      <div class="glass-card">
-        <div class="card-header-flex">
-          <h3>3. DURATION</h3>
-          
+        <div class="maker-setting-group">
+          <div class="maker-section-heading">
+            <h2>Product type</h2>
+            <span>Sets the scene plan</span>
+          </div>
+          <div class="category-grid" role="group" aria-label="Product type">
+            <button type="button" class="category-item active" data-category="Shoe" aria-pressed="true">Shoe</button>
+            <button type="button" class="category-item" data-category="Watch" aria-pressed="false">Watch</button>
+            <button type="button" class="category-item" data-category="Bag" aria-pressed="false">Bag</button>
+            <button type="button" class="category-item" data-category="Other" aria-pressed="false">Other</button>
+          </div>
+          <input type="hidden" id="selected-category" value="Shoe">
+          <div id="other-input-container" class="maker-other-input" style="display:none;">
+            <label for="other-product-name">Product name</label>
+            <input type="text" id="other-product-name" class="form-control glass-input" placeholder="e.g. Sunglasses, Perfume…" maxlength="200">
+          </div>
+          <details class="maker-disclosure">
+            <summary>View shot plan</summary>
+            <div class="scene-plan-box" id="scene-plan-box"></div>
+          </details>
         </div>
-        <p class="text-muted small mb-3">Choose the exact final reel length.</p>
-        <div class="duration-grid">
-          <div class="duration-item active" data-duration="4">4s</div>
-          <div class="duration-item" data-duration="6">6s</div>
-          <div class="duration-item" data-duration="8">8s</div>
-        </div>
-        <input type="hidden" id="selected-duration" value="4">
-      </div>
 
-      <!-- Step 4 -->
-      <div class="glass-card">
-        <div class="card-header-flex">
-          <h3>4. CAPTION MOTION</h3>
-          
+        <div class="maker-settings-row">
+          <div class="maker-option-block">
+            <h2>Reel length</h2>
+            <div class="duration-grid" role="group" aria-label="Reel length">
+              <button type="button" class="duration-item active" data-duration="4" aria-pressed="true">4s</button>
+              <button type="button" class="duration-item" data-duration="6" aria-pressed="false">6s</button>
+              <button type="button" class="duration-item" data-duration="8" aria-pressed="false">8s</button>
+            </div>
+            <input type="hidden" id="selected-duration" value="4">
+          </div>
+          <div class="maker-option-block">
+            <label for="captionStyle">Caption motion</label>
+            <select id="captionStyle" class="form-select glass-select">
+              <option value="auto">Auto mixed styles</option>
+              <option value="karaoke">Word-by-word / karaoke</option>
+              <option value="bounce">Pop / bounce emphasis</option>
+              <option value="slide_up">Slide up</option>
+              <option value="typewriter">Typewriter</option>
+              <option value="zoom">Zoom-in emphasis</option>
+              <option value="glitch">Glitch / flicker</option>
+              <option value="fade_motion">Fade + slight motion</option>
+              <option value="punch">Punch-in key words</option>
+            </select>
+          </div>
         </div>
-        <p class="text-muted small mb-3">Pick a short-form caption animation style. Auto mixes several clean presets.</p>
-        <select id="captionStyle" class="form-select glass-select">
-          <option value="auto">Auto mixed styles</option>
-          <option value="karaoke">Word-by-word / karaoke</option>
-          <option value="bounce">Pop / bounce emphasis</option>
-          <option value="slide_up">Slide up</option>
-          <option value="typewriter">Typewriter</option>
-          <option value="zoom">Zoom-in emphasis</option>
-          <option value="glitch">Glitch / flicker</option>
-          <option value="fade_motion">Fade + slight motion</option>
-          <option value="punch">Punch-in key words</option>
-        </select>
-        <div class="caption-preview-strip mt-3">
-          <span class="caption-preview-word">Fresh</span>
-          <span class="caption-preview-word">product</span>
-          <span class="caption-preview-word">energy</span>
+        <div class="maker-submit-row">
+          {% if user.is_authenticated %}
+            <button type="button" id="generateBtn" class="btn-generate-premium">Generate Reel <span aria-hidden="true">→</span></button>
+          {% else %}
+            <button type="button" class="btn-generate-premium" data-bs-toggle="modal" data-bs-target="#loginModal">Log in to Generate</button>
+          {% endif %}
+          <p>Your reel appears in the preview when processing finishes.</p>
         </div>
-      </div>
 
-      <!-- Step 5 -->
-      <div class="glass-card">
-        <div class="card-header-flex">
-          <h3>5. CREATE REEL</h3>
-          
-        </div>
-        <div class="reel-feature-list mb-3">
-          <div class="reel-feature">AI removes your product background</div>
-          <div class="reel-feature">5 cinematic scenes with rim light &amp; grading</div>
-          <div class="reel-feature">Ken Burns + zoom morph, whip-pan &amp; flash cuts</div>
-          <div class="reel-feature">Timed animated captions rendered into the MP4</div>
-          <div class="reel-feature">Scene-aware spotlight &amp; shadow compositing</div>
-          <div class="reel-feature">4s, 6s, or 8s exact export — fully local, no video API needed</div>
-        </div>
-        {% if user.is_authenticated %}
-          <button type="button" id="generateBtn" class="btn-generate-premium w-100">Generate Reel</button>
-        {% else %}
-          <button class="btn-generate-premium w-100" data-bs-toggle="modal" data-bs-target="#loginModal">Log in to Generate</button>
-        {% endif %}
+        <details class="maker-disclosure maker-process-details">
+          <summary>What happens when you generate?</summary>
+          <div class="reel-feature-list">
+            <div class="reel-feature">AI removes your product background</div>
+            <div class="reel-feature">5 cinematic scenes with rim light &amp; grading</div>
+            <div class="reel-feature">Ken Burns + zoom morph, whip-pan &amp; flash cuts</div>
+            <div class="reel-feature">Timed animated captions rendered into the MP4</div>
+            <div class="reel-feature">Scene-aware spotlight &amp; shadow compositing</div>
+            <div class="reel-feature">4s, 6s, or 8s exact export — fully local, no video API needed</div>
+          </div>
+        </details>
       </div>
-    </div>
+    </section>
 
     <!-- ── RIGHT: Preview ── -->
     <div class="preview-column">
       <div class="glass-card preview-card-premium d-flex flex-column">
-        <div class="card-header-flex">
-          <h3>PREVIEW</h3>
-          <span class="info-icon" title="Your reel will appear here once generated">ⓘ</span>
-        </div>
+        <div class="maker-preview-heading"><h2>Preview</h2><span>Output · MP4</span></div>
 
         <!-- Canvas -->
         <div class="reel-canvas" id="reel-canvas">
           <div id="reel-placeholder" class="reel-placeholder">
-            <span style="font-size:3.2rem;">🎬</span>
-            <p>Your product reel<br>will appear here</p>
+            <div class="maker-preview-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8 6 4-6 4z"/></svg></div>
+            <p>Your reel preview</p><span>Upload a product image to begin</span>
           </div>
           <div class="loader-overlay" id="loader-overlay" style="display:none;">
             <div class="spinner-premium"></div>
@@ -237,92 +221,7 @@
 {% endblock %}
 
 {% block scripts %}{{ block.super }}
-<style>
-/* ── Reel Maker extras ── */
-.scene-plan-box {
-  background: rgba(91,124,250,0.06);
-  border: 1px solid rgba(91,124,250,0.15);
-  border-radius: 10px;
-  padding: 12px 14px;
-  font-size: .78rem;
-  color: #444;
-  line-height: 1.9;
-  white-space: pre-line;
-}
-.scene-plan-box .plan-heading {
-  font-size: .68rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--primary);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  display: block;
-}
-.reel-feature-list { display:flex; flex-direction:column; gap:6px; }
-.reel-feature {
-  display:flex; align-items:center; gap:8px;
-  font-size:.82rem; color:#555;
-}
-/* Pipeline steps */
-.pipeline-steps { display:flex; flex-direction:column; gap:5px; padding:2px 0; }
-.pipe-step { display:flex; align-items:center; gap:10px; font-size:.8rem; color:#666; }
-.pipe-dot {
-  width:20px; height:20px; border-radius:50%;
-  display:inline-flex; align-items:center; justify-content:center;
-  font-size:.72rem; font-weight:700; flex-shrink:0;
-}
-.pipe-done    { background:#22c55e; color:#fff; }
-.pipe-active  { background:var(--primary); color:#fff; animation:pdot 1.1s ease-in-out infinite; }
-.pipe-pending { background:#e5e7eb; color:#999; }
-@keyframes pdot { 0%,100%{opacity:1} 50%{opacity:.45} }
-.loader-msg-text {
-  color:white; margin-top:12px; font-weight:700;
-  letter-spacing:1px; font-size:.82rem;
-}
 
-/* Duration grid styling */
-.duration-grid {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-}
-.duration-item {
-  flex: 1;
-  text-align: center;
-  padding: 8px 0;
-  font-size: .85rem;
-  border: 1px solid rgba(91,124,250,0.25);
-  border-radius: 8px;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color .2s, color .2s;
-}
-.duration-item.active {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-.caption-preview-strip {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.caption-preview-word {
-  background: rgba(11,18,32,.86);
-  color: #fff;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: .78rem;
-  font-weight: 800;
-  animation: captionPreviewPop 1.8s ease-in-out infinite;
-}
-.caption-preview-word:nth-child(2) { animation-delay: .18s; }
-.caption-preview-word:nth-child(3) { animation-delay: .36s; }
-@keyframes captionPreviewPop {
-  0%, 80%, 100% { transform: translateY(0) scale(1); opacity: .74; }
-  18% { transform: translateY(-3px) scale(1.06); opacity: 1; }
-}
-</style>
 
 <script>
 const SUBMIT_URL   = "{% url 'submit_reel' %}";
@@ -379,7 +278,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const changeImgBtn  = document.getElementById("changeImgBtn");
   const uploadContent = document.getElementById("upload-content");
   const uploadPreview = document.getElementById("upload-preview");
-  const uploadThumb   = document.getElementById("upload-thumb");
+  let uploadThumb     = document.getElementById("upload-thumb");
   const uploadFilename= document.getElementById("upload-filename");
   const dropZone      = document.getElementById("drop-zone");
   const generateBtn   = document.getElementById("generateBtn");
@@ -483,8 +382,9 @@ document.addEventListener("DOMContentLoaded", function () {
   /* ── Category select ── */
   catItems.forEach(item => {
     item.addEventListener("click", function () {
-      catItems.forEach(i => i.classList.remove("active"));
+      catItems.forEach(i => { i.classList.remove("active"); i.setAttribute("aria-pressed", "false"); });
       this.classList.add("active");
+      this.setAttribute("aria-pressed", "true");
       hiddenCat.value = this.dataset.category;
       otherContainer.style.display = this.dataset.category === "Other" ? "block" : "none";
       renderScenePlan(this.dataset.category);
@@ -494,8 +394,9 @@ document.addEventListener("DOMContentLoaded", function () {
   /* ── Duration select ── */
   durationItems.forEach(item => {
     item.addEventListener("click", function () {
-      durationItems.forEach(i => i.classList.remove("active"));
+      durationItems.forEach(i => { i.classList.remove("active"); i.setAttribute("aria-pressed", "false"); });
       this.classList.add("active");
+      this.setAttribute("aria-pressed", "true");
       if (hiddenDuration) hiddenDuration.value = this.dataset.duration;
     });
   });
@@ -504,10 +405,10 @@ document.addEventListener("DOMContentLoaded", function () {
   uploadBtn.addEventListener("click", () => imageInput.click());
   if (changeImgBtn) changeImgBtn.addEventListener("click", () => imageInput.click());
 
-  dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.style.borderColor = "var(--primary2)"; });
-  dropZone.addEventListener("dragleave", () => { dropZone.style.borderColor = "var(--primary)"; });
+  dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("is-drag-over"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("is-drag-over"));
   dropZone.addEventListener("drop", e => {
-    e.preventDefault(); dropZone.style.borderColor = "var(--primary)";
+    e.preventDefault(); dropZone.classList.remove("is-drag-over");
     if (e.dataTransfer.files.length) { imageInput.files = e.dataTransfer.files; handleFile(); }
   });
   imageInput.addEventListener("change", handleFile);
@@ -515,18 +416,35 @@ document.addEventListener("DOMContentLoaded", function () {
   function handleFile() {
     if (!imageInput.files || !imageInput.files.length) return;
     const file = imageInput.files[0];
+    if (!/\.(jpe?g|png|webp)$/i.test(file.name) || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      imageInput.value = "";
+      window.RSToast?.show("Choose a JPG, PNG, or WEBP image.", "error");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      imageInput.value = "";
+      window.RSToast?.show("Choose an image smaller than 15 MB.", "error");
+      return;
+    }
+    if (!uploadThumb) {
+      uploadThumb = document.createElement("img");
+      uploadThumb.id = "upload-thumb";
+      uploadThumb.alt = "Selected product image";
+      uploadPreview.prepend(uploadThumb);
+    }
     const reader = new FileReader();
     reader.onload = e => {
       uploadThumb.src = e.target.result;
       const n = file.name;
       uploadFilename.textContent = n.length > 30 ? n.slice(0, 14) + "…" + n.slice(-12) : n;
       uploadContent.style.display = "none";
-      uploadPreview.style.display = "block";
+      uploadPreview.style.display = "flex";
       // Hint in canvas
       reelPlaceholder.style.backgroundImage = `url(${e.target.result})`;
       reelPlaceholder.style.backgroundSize = "contain";
       reelPlaceholder.style.backgroundRepeat = "no-repeat";
       reelPlaceholder.style.backgroundPosition = "center";
+      reelPlaceholder.classList.add("has-upload");
     };
     reader.readAsDataURL(file);
   }
@@ -694,6 +612,12 @@ document.addEventListener("DOMContentLoaded", function () {
         window.RSToast && RSToast.show("Please upload a product image first.", "warning");
         document.getElementById("drop-zone")?.classList.add("drop-zone-shake");
         setTimeout(() => document.getElementById("drop-zone")?.classList.remove("drop-zone-shake"), 600);
+        uploadBtn.focus();
+        return;
+      }
+      if (hiddenCat.value === "Other" && !document.getElementById("other-product-name")?.value.trim()) {
+        window.RSToast?.show("Enter a product name for Other.", "warning");
+        document.getElementById("other-product-name")?.focus();
         return;
       }
 
@@ -711,6 +635,7 @@ document.addEventListener("DOMContentLoaded", function () {
       loaderOverlay.style.display = "flex";
       loaderMsg.textContent = "UPLOADING…";
       pipelineSteps.style.display = "flex";
+      if (window.innerWidth <= 810) reelCanvas.scrollIntoView({behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'center'});
 
       // Reset pipeline dots
       ["dot-bg","dot-scenes","dot-composite","dot-video"].forEach(id => {

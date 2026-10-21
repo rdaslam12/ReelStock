@@ -8,7 +8,7 @@
   --admin-primary-soft: #e8edff;
   --admin-success: #16815d;
   --admin-danger: #c83c43;
-  --admin-shadow: 0 10px 30px rgba(24, 34, 49, .08);
+  --admin-shadow: 0 4px 18px rgba(24, 34, 49, .07);
 }
 
 * { box-sizing: border-box; }

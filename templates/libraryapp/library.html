@@ -1,177 +1,118 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Library – ReelStock{% endblock %}
+{% block extra_head %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/library-page.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container py-4" style="max-width:1280px;">
-
-  <!-- Header -->
-<div class="mb-4">
-  <!-- Top row: title + type toggle -->
-  <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-3">
-    <div>
-      <h2 class="fw-bold mb-1">Asset Library</h2>
-      <p class="text-muted mb-0">
-        Explore published images and product reels — pay with Reel Coins to download.
-      </p>
+<div class="library-page">
+  <header class="library-header">
+    <div class="library-heading">
+      <h1>Asset <em>Library</em></h1>
+      <p>Explore published images and product reels — pay with Reel Coins to download.</p>
     </div>
-
-    <div class="btn-group shadow-sm align-self-start" role="group">
-      <a href="?type=images{% if search_query %}&search={{ search_query|urlencode }}{% endif %}"
-         class="btn {% if media_type == 'images' %}btn-primary{% else %}btn-outline-primary{% endif %} px-4 py-2">
-        🖼 Photos
-      </a>
-      <a href="?type=videos{% if search_query %}&search={{ search_query|urlencode }}{% endif %}"
-         class="btn {% if media_type == 'videos' %}btn-primary{% else %}btn-outline-primary{% endif %} px-4 py-2">
-        🎬 Videos
-      </a>
+    <div class="library-type-switch" role="group" aria-label="Media type">
+      <a href="?type=images{% if search_query %}&amp;search={{ search_query|urlencode }}{% endif %}"
+         class="library-type-link {% if media_type == 'images' %}is-active{% endif %}"
+         {% if media_type == 'images' %}aria-current="page"{% endif %}>Photos</a>
+      <a href="?type=videos{% if search_query %}&amp;search={{ search_query|urlencode }}{% endif %}"
+         class="library-type-link {% if media_type == 'videos' %}is-active{% endif %}"
+         {% if media_type == 'videos' %}aria-current="page"{% endif %}>Videos</a>
     </div>
-  </div>
+  </header>
 
-  <!-- Middle row: library chips -->
-  <div class="d-flex flex-wrap gap-2 mb-3">
-    <a href="{% url 'trending' %}" class="btn btn-outline-secondary rounded-pill px-3">🔥 Trending</a>
+  <nav class="library-quick-links" aria-label="Explore the library">
+    <a href="{% url 'trending' %}">Trending</a>
     {% if user.is_authenticated %}
-      <a href="{% url 'following_feed' %}" class="btn btn-outline-secondary rounded-pill px-3">📡 Following</a>
-      <a href="{% url 'my_bookmarks' %}" class="btn btn-outline-secondary rounded-pill px-3">🔖 Bookmarks</a>
-      <a href="{% url 'my_collections' %}" class="btn btn-outline-secondary rounded-pill px-3">📁 Collections</a>
+      <a href="{% url 'following_feed' %}">Following</a>
+      <a href="{% url 'my_bookmarks' %}">Bookmarks</a>
+      <a href="{% url 'my_collections' %}">Collections</a>
     {% endif %}
-  </div>
+  </nav>
 
-  <!-- Bottom row: search and filters -->
-  <form method="get" class="row g-2 align-items-center mb-5">
+  <form method="get" class="library-filter-form" role="search">
     <input type="hidden" name="type" value="{{ media_type }}">
-
-    <div class="col-12 col-lg-5">
-      <input type="text"
-             class="form-control rounded-3 shadow-sm"
-             name="search"
-             placeholder="Search..."
+    <div class="library-search-field">
+      <label for="library-search">Search {{ media_type }}</label>
+      <input id="library-search" type="search" name="search"
+             placeholder="{% if media_type == 'videos' %}Search titles or products{% else %}Search titles or prompts{% endif %}"
              value="{{ search_query }}">
     </div>
-
     {% if categories %}
-    <div class="col-12 col-md-5 col-lg-3">
-      <select name="category" class="form-select rounded-3 shadow-sm">
-        <option value="">All {% if media_type == 'videos' %}categories{% else %}styles{% endif %}</option>
-        {% for cat in categories %}
-          <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
-        {% endfor %}
-      </select>
-    </div>
+      <div class="library-select-field">
+        <label for="library-category">{% if media_type == 'videos' %}Category{% else %}Style{% endif %}</label>
+        <select id="library-category" name="category">
+          <option value="">All {% if media_type == 'videos' %}categories{% else %}styles{% endif %}</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
     {% endif %}
-
-    <div class="col-auto">
-      <button type="submit" class="btn btn-primary rounded-3 px-4 shadow-sm">Filter</button>
-    </div>
-
-    <div class="col-auto">
-      <a href="?type={{ media_type }}" class="btn btn-outline-secondary rounded-3">Reset</a>
-    </div>
+    <button type="submit" class="library-filter-submit">Apply filters</button>
+    {% if search_query or current_category %}
+      <a href="?type={{ media_type }}" class="library-filter-clear">Clear</a>
+    {% endif %}
   </form>
-</div>
-  <!-- Grid -->
+
+  <div class="library-results-heading">
+    <div>
+      <h2>{% if media_type == 'videos' %}Product reels{% else %}Published images{% endif %}</h2>
+      <p>
+        {{ assets.paginator.count }} {% if media_type == 'videos' %}video{{ assets.paginator.count|pluralize }}{% else %}image{{ assets.paginator.count|pluralize }}{% endif %}
+        {% if search_query or current_category %}matching your filters{% else %}to explore{% endif %}
+      </p>
+    </div>
+    {% if assets %}
+      <span class="library-range">Showing {{ assets.start_index }}–{{ assets.end_index }}</span>
+    {% endif %}
+  </div>
+
   {% if assets %}
-    <div class="library-grid">
+    <div class="library-page-grid {% if media_type == 'videos' %}is-videos{% endif %}">
       {% for asset in assets %}
-        {% if media_type == 'images' %}
-          <div class="lib-card reveal-up">
-            <a href="{% url 'asset_detail' 'image' asset.pk %}" class="text-decoration-none">
-              <div class="lib-card-media">
-                <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" loading="lazy">
-              </div>
-            </a>
-            <div class="lib-card-info">
-              <a href="{% url 'asset_detail' 'image' asset.pk %}" class="text-decoration-none text-dark">
-                <div class="lib-card-title">{{ asset.display_title }}</div>
-              </a>
-              <div class="lib-card-meta">
-                <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
-                     class="lib-avatar" alt="{{ asset.user.username }}">
-                <span>{{ asset.user.get_full_name|default:asset.user.username }}</span>
-                {% if asset.style %}<span class="lib-badge">{{ asset.style }}</span>{% endif %}
-                <span class="lib-price-chip ms-auto">
-                  <span class="coin-icon">🪙</span>{{ asset.coin_price }} RC
-                </span>
-              </div>
-              <div class="lib-card-bottom">
-                <span class="asset-views-chip">👁 {{ asset.view_count }}</span>
-                {% if user.is_authenticated and user.id == asset.user_id %}
-                  <button class="btn-basket is-in-basket" disabled title="Your own asset">✓ Yours</button>
-                {% elif asset.pk in basket_image_ids %}
-                  <button class="btn-basket is-in-basket"
-                          data-asset-type="image"
-                          data-asset-id="{{ asset.pk }}"
-                          disabled>✓ In Basket</button>
-                {% else %}
-                  <button type="button" class="btn-basket"
-                          data-asset-type="image"
-                          data-asset-id="{{ asset.pk }}">🧺 Add to Basket</button>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-        {% else %}
-          <div class="lib-card reveal-up">
-            <a href="{% url 'asset_detail' 'video' asset.pk %}" class="text-decoration-none">
-              <div class="lib-card-media lib-card-video">
-                {% if asset.playback_url %}
-                  <video src="{{ asset.playback_url }}" muted loop playsinline preload="metadata"
-                         {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
-                         style="width:100%;height:100%;object-fit:cover;"
-                         onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
-                {% elif asset.source_media_url %}
-                  <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" loading="lazy">
-                {% endif %}
-                <div class="lib-play-icon">▶</div>
-              </div>
-            </a>
-            <div class="lib-card-info">
-              <a href="{% url 'asset_detail' 'video' asset.pk %}" class="text-decoration-none text-dark">
-                <div class="lib-card-title">{{ asset.display_title }}</div>
-              </a>
-              <div class="lib-card-meta">
-                <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
-                     class="lib-avatar" alt="{{ asset.user.username }}">
-                <span>{{ asset.user.get_full_name|default:asset.user.username }}</span>
-                {% if asset.category %}<span class="lib-badge">{{ asset.category }}</span>{% endif %}
-                <span class="lib-price-chip ms-auto">
-                  <span class="coin-icon">🪙</span>{{ asset.coin_price }} RC
-                </span>
-              </div>
-              <div class="lib-card-bottom">
-                <span class="asset-views-chip">👁 {{ asset.view_count }}</span>
-                {% if user.is_authenticated and user.id == asset.user_id %}
-                  <button class="btn-basket is-in-basket" disabled title="Your own asset">✓ Yours</button>
-                {% elif asset.pk in basket_video_ids %}
-                  <button class="btn-basket is-in-basket"
-                          data-asset-type="video"
-                          data-asset-id="{{ asset.pk }}"
-                          disabled>✓ In Basket</button>
-                {% else %}
-                  <button type="button" class="btn-basket"
-                          data-asset-type="video"
-                          data-asset-id="{{ asset.pk }}">🧺 Add to Basket</button>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-        {% endif %}
+        {% include 'libraryapp/_library_card.html' %}
       {% endfor %}
     </div>
     {% include 'libraryapp/_pagination.html' %}
   {% else %}
-    <div class="text-center py-5 reveal-up">
-      <div style="font-size:3.5rem;">{% if media_type == 'videos' %}🎬{% else %}🖼{% endif %}</div>
+    <div class="library-empty">
       {% if search_query or current_category %}
-        <h4 class="mt-3 mb-2">No matching {{ media_type }}</h4>
-        <p class="text-muted mb-4">Try a different search or reset the filters.</p>
+        <h3>No matching {{ media_type }}</h3>
+        <p>Try a different search or reset the filters.</p>
+        <a href="?type={{ media_type }}" class="library-empty-action">Clear filters</a>
       {% else %}
-        <h4 class="mt-3 mb-2">No {{ media_type }} published yet</h4>
-        <p class="text-muted mb-4">Be the first — generate and publish your creation.</p>
+        <h3>No {{ media_type }} published yet</h3>
+        <p>Be the first — generate and publish your creation.</p>
+        <a href="{% if media_type == 'videos' %}{% url 'create' %}{% else %}{% url 'prompt_to_image' %}{% endif %}"
+           class="library-empty-action">Create Now</a>
       {% endif %}
-      <a href="{% if media_type == 'videos' %}{% url 'create' %}{% else %}{% url 'prompt_to_image' %}{% endif %}"
-         class="btn btn-primary rounded-pill px-5">Create Now</a>
     </div>
   {% endif %}
-
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  if ('IntersectionObserver' in window) {
+    const videoObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) entry.target.pause();
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.library-page video').forEach(function (video) {
+      videoObserver.observe(video);
+    });
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      document.querySelectorAll('.library-page video').forEach(function (video) {
+        video.pause();
+      });
+    }
+  });
+</script>
 {% endblock %}
