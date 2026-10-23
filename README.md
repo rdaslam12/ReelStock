@@ -6,6 +6,16 @@ Creating reusable product media is expensive and fragmented across image editing
 
 The system combines hosted image inference with local compositing and video processing. Django manages asset ownership, publication, discovery, creator interactions, and platform operations around those generation paths.
 
+## Why ReelStock
+
+ReelStock explores the idea of a stock media platform built specifically around AI-generated content.
+
+Generative models make it increasingly easy to create visual media, but producing useful results still often depends on knowing how to prompt, choosing the right tools, and moving content between separate generation, editing, publishing, and asset-management workflows.
+
+ReelStock approaches this differently: creators with strong visual ideas can generate and publish media inside one platform, while users who simply need stock content can discover and download those assets without interacting with generative models themselves.
+
+The project currently explores this idea through two generation workflows: prompt-based image generation and a low-input product Reel Maker.
+
 ## Product Preview
 
 ### Create, generate, and publish from one workspace
@@ -178,6 +188,24 @@ The suite covers account validation and Google routing, owned draft creation and
 The current implementation runs as a single Django application with SQLite, local media storage, and local CPU-based video processing. Still-image inference runs during the HTTP request; each reel job runs in an in-process daemon thread while the browser polls its database status. Jobs depend on the application process remaining alive and have no durable queue or automatic retry mechanism.
 
 The checked-in settings target local development (`DEBUG=True`, permissive hosts, and Django-served media). Publication rules govern application pages; local media URLs are not protected by per-file authorization. A public deployment needs explicit host/security settings, appropriate media access and serving, and backups of both SQLite and media. Provider integration includes configurable models/timeouts, logging, and fallbacks; model training, experiment tracking, and a model registry are outside the current implementation.
+
+### Reel Maker: Current Design Tradeoff
+
+The current Reel Maker is intentionally built around deterministic image processing, compositing, and local video assembly rather than relying entirely on a commercial text-to-video or image-to-video model.
+
+This creates a tradeoff. The resulting videos do not match the visual realism or motion quality of the latest commercial video-generation systems, but the pipeline is considerably more controllable, inexpensive to experiment with, and suitable for demonstrating the complete product workflow without requiring costly inference for every generation.
+
+The interface is designed around minimizing prompting. A creator uploads a product, selects its category, adjusts a small number of parameters, and the system handles the remaining generation steps.
+
+This also leaves a clear path for future expansion. A stronger video model could replace or augment parts of the rendering pipeline while keeping the same user workflow. Product category, visual settings, caption style, and other structured inputs could be translated internally into engineered prompts and generation instructions, allowing more capable models to improve output quality without exposing prompt engineering complexity to the user.
+
+## Future Direction
+
+The current implementation focuses on proving the end-to-end product workflow rather than maximizing generative model quality.
+
+A natural next step would be a hybrid Reel Maker in which local processing remains responsible for deterministic tasks such as product isolation, metadata, captions, publishing, and asset management, while selected scene or motion-generation stages are delegated to more capable video models.
+
+This would preserve ReelStock's low-input user experience while allowing the quality of generated product reels to improve as video-generation models become more accessible and cost-effective.
 
 ## Documentation
 
